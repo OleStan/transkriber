@@ -1,0 +1,10 @@
+<h1 class="mb-20">Transcriber</h1>
+
+
+<div class="border border-3 p-5">
+  <%= form_with(model: @transcription, class: "flex flex-col") do |form| %>
+    <p>audio form</p>
+    <p><%= form.file_field :audio %></p>
+    <p><%= form.submit "Upload", class: "border border-2 bg-green-500 px-3 py-1 rounded" %></p>
+  <% end %>
+</div>
