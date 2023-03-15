@@ -1,0 +1,7 @@
+<% if @transcription.result.present? %>
+  <div id="result" class="border border-1 rounded border-gray-400px shadow min-h-full" >
+    <%= text_area_tag :result, @transcription.result,
+                      data: {'clipboard-target': 'toCopy'},
+                      class: "w-full border border-0"%>
+  </div>
+<% end %>

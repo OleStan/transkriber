@@ -1,21 +1,31 @@
 class AudioTranscriptionsController < ApplicationController
   before_action :find_audio_transcription, only: %i[transcribe show]
 
+  def index
+    @transcriptions = AudioTranscription.paginate(page: params[:page])
+  end
+
   def show; end
 
   def create
     @transcription = AudioTranscription.new(transcriptions_params)
-    if @transcription.save
-      p "saved --------------------------------"
-      redirect_to audio_transcription_path(@transcription)
-    else
-      render "fdggdfgdf"
+    respond_to do |format|
+      if @transcription.save
+        p "saved --------------------------------"
+        format.html { redirect_to audio_transcription_path(@transcription) }
+      else
+        format.html { redirect_to root_path }
+      end
     end
   end
 
   def transcribe
-    @transcription.transcribe_audio
-    p "end"
+    text_from_audio = @transcription.transcribe_audio
+    @transcription.update(result: text_from_audio)
+
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: turbo_stream.update("result_div", partial: "audio_transcriptions/result", locals: { result: @transcription.result }) }
+    end
   end
 
   private

@@ -1,0 +1,11 @@
+<header class="bg-green-500 text-black">
+  <div class="container mx-auto py-4 px-8 flex items-center justify-between">
+    <%= link_to 'Transcriber', root_path, class: 'text-lg font-semibold' %>
+    <nav>
+      <ul class="flex items-center gap-4">
+        <li><%= link_to 'Home', root_path, class: 'hover:text-green-300' %></li>
+        <li><%= link_to 'Transcriptions', audio_transcriptions_path, class: 'bg-black text-green-500 px-4 py-2 rounded-full font-semibold hover:bg-gray-200 transition-colors duration-300' %></li>
+      </ul>
+    </nav>
+  </div>
+</header>

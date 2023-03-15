@@ -48,6 +48,17 @@ gem "ruby-openai"
 # Env keys
 gem 'figaro'
 
+# pagination
+gem 'will_paginate', '~> 3.3'
+
+# Zappa is a high level audio manipulation library for Ruby, inspired by pydub.
+#gem 'zappa'
+# gem 'chunk_uploader', git: 'git@bitbucket.org:techery/chunk-uploader.git'
+gem "ffmpeg"
+
+gem "open3"
+gem "streamio-ffmpeg"
+
 # http request helper
 gem "httparty"
 
