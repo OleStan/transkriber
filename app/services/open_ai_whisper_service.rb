@@ -34,8 +34,8 @@ class OpenAiWhisperService < ApplicationService
           chunk_file.binmode
           chunk_file.write(file.read(length))
           chunk_file.close
-
           response << audio_to_text(chunk_file.open, format)
+          p response
         end
       else
         response << audio_to_text(File.open(file.path), format)
@@ -66,7 +66,9 @@ class OpenAiWhisperService < ApplicationService
       body: {
         file: File.open(temp_file),
         model: model
-      }
+      },
+    timeout: 180, # increase the timeout to 60 seconds
+      open_timeout: 180 # increase the open timeout to 30 seconds
     })
 
     return "Error: #{response["error"]}" if response["error"].present?
