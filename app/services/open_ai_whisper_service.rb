@@ -65,7 +65,8 @@ class OpenAiWhisperService < ApplicationService
       },
       body: {
         file: File.open(temp_file),
-        model: model
+        model: model,
+        language: 'ua',
       },
     timeout: 180, # increase the timeout to 60 seconds
       open_timeout: 180 # increase the open timeout to 30 seconds
