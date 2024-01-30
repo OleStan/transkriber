@@ -66,11 +66,13 @@ class OpenAiWhisperService < ApplicationService
       body: {
         file: File.open(temp_file),
         model: model,
-        language: 'ua',
+        language: 'en',
+        response_format: 'vtt'
       },
     timeout: 180, # increase the timeout to 60 seconds
       open_timeout: 180 # increase the open timeout to 30 seconds
     })
+
 
     return "Error: #{response["error"]}" if response["error"].present?
 

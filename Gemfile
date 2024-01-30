@@ -59,6 +59,8 @@ gem "ffmpeg"
 gem "open3"
 gem "streamio-ffmpeg"
 
+gem 'vite_rails'
+
 # http request helper
 gem "httparty"
 
