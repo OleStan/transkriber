@@ -20,7 +20,8 @@ class AudioTranscriptionsController < ApplicationController
   end
 
   def transcribe
-    text_from_audio = @transcription.transcribe_audio
+    text_from_audio = @transcription.transcribe_audio.join
+
     @transcription.update(result: text_from_audio)
 
     respond_to do |format|
