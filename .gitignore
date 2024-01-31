@@ -32,3 +32,8 @@
 
 /app/assets/builds/*
 !/app/assets/builds/.keep
+temp/*
+temp
+test_files/*
+node_modules/*
+.idea/*
