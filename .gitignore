@@ -37,3 +37,6 @@ temp
 test_files/*
 node_modules/*
 .idea/*
+
+config/application.yml
+
