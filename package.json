@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "bin/vite dev",
+    "dev": "bin/vite dev",
     "vite": "yarn start"
   },
   "dependencies": {
@@ -14,6 +14,8 @@
     "@mui/icons-material": "^5.15.7",
     "@mui/joy": "^5.0.0-beta.24",
     "@mui/material": "^5.15.7",
+    "@reduxjs/toolkit": "^2.1.0",
+    "@types/react-redux": "^7.1.33",
     "@types/react-router-dom": "^5.3.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

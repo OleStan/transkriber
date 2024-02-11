@@ -8,4 +8,8 @@ Rails.application.routes.draw do
     post :transcribe, on: :member
   end
 
+  namespace :ajax do
+    resources :transcriptions, only: %i[index show]
+  end
+
 end

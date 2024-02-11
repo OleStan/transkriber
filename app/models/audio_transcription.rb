@@ -1,7 +1,4 @@
 class AudioTranscription < ApplicationRecord
-  require 'open3'
-  require 'streamio-ffmpeg'
-
   has_one_attached :audio
   default_scope { order(created_at: :desc) }
 

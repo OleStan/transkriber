@@ -55,14 +55,13 @@ gem 'will_paginate', '~> 3.3'
 #gem 'zappa'
 # gem 'chunk_uploader', git: 'git@bitbucket.org:techery/chunk-uploader.git'
 gem "ffmpeg"
-
 gem "open3"
 gem "streamio-ffmpeg"
 
 gem 'vite_rails'
 
 # http request helper
-gem "httparty"
+gem 'active_model_serializers'
 
 # Use Sass to process CSS
 # gem "sassc-rails"
