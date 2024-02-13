@@ -5,7 +5,8 @@
                  class: "w-full font-semibold bg-black text-white py-4 rounded-md shadow-md hover:bg-gray-900 transition-colors duration-300 ease-in-out mt-4" %>
 
   <div id="result_div" data-turbo-frame="show" class="mt-4">
-    <%= render partial: "audio_transcriptions/result", locals: { result: @transcription.result } %>
+    <%= render partial: "audio_transcriptions/result_json", locals: { result: @transcription.transcription_json } %>
+    <%#= render partial: "audio_transcriptions/result", locals: { result: @transcription.result } %>
   </div>
 
   <%= button_to @transcription.result.present? ? "Retranscribe" : "Transcribe",

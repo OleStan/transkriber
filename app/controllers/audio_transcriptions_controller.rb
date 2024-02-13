@@ -11,7 +11,6 @@ class AudioTranscriptionsController < ApplicationController
     @transcription = AudioTranscription.new(transcriptions_params)
     respond_to do |format|
       if @transcription.save
-        p "saved --------------------------------"
         format.html { redirect_to audio_transcription_path(@transcription) }
       else
         format.html { redirect_to root_path }
@@ -20,8 +19,12 @@ class AudioTranscriptionsController < ApplicationController
   end
 
   def transcribe
-    text_from_audio = @transcription.transcribe_audio
-    @transcription.update(result: text_from_audio)
+    @result = TranscribeAudioTranscription.new(id: params[:id]).perform
+
+    #
+    # text_from_audio = @transcription.transcribe_audio.join
+    #
+    # @transcription.update(result: text_from_audio)
 
     respond_to do |format|
       format.turbo_stream { render turbo_stream: turbo_stream.update("result_div", partial: "audio_transcriptions/result", locals: { result: @transcription.result }) }
