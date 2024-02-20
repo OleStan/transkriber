@@ -1,9 +1,7 @@
-import { Controller } from "@hotwired/stimulus"
-
+import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-
-  static targets = ["submitTranscribe"]
+  static targets = ["submitTranscribe"];
   connect() {
     let submitTranscribe = this.submitTranscribeTarget;
 
@@ -20,7 +18,7 @@ export default class extends Controller {
 
   confirm() {
     if (!confirm(this.submitTranscribeTarget.get("message"))) {
-      event.preventDefault()
+      event.preventDefault();
     }
   }
 }

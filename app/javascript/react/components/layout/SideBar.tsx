@@ -4,7 +4,6 @@ import GlobalStyles from '@mui/joy/GlobalStyles';
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
 
-import Chip from '@mui/joy/Chip';
 import Divider from '@mui/joy/Divider';
 import IconButton from '@mui/joy/IconButton';
 
@@ -16,7 +15,6 @@ import Typography from '@mui/joy/Typography';
 import Sheet from '@mui/joy/Sheet';
 
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import QuestionAnswerRoundedIcon from '@mui/icons-material/QuestionAnswerRounded';
 import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
 import SupportRoundedIcon from '@mui/icons-material/SupportRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
@@ -29,10 +27,10 @@ import ColorSchemeToggle from './ColorSchemeToggle';
 import { closeSidebar } from './utils';
 
 function Toggler({
-                   defaultExpanded = false,
-                   renderToggle,
-                   children,
-                 }: {
+  defaultExpanded = false,
+  renderToggle,
+  children,
+}: {
   defaultExpanded?: boolean;
   children: React.ReactNode;
   renderToggle: (params: {
@@ -63,7 +61,7 @@ function Toggler({
 export default function SideBar() {
   return (
     <Sheet
-      className="Sidebar"
+      className='Sidebar'
       sx={{
         position: { xs: 'fixed', md: 'sticky' },
         transform: {
@@ -95,7 +93,7 @@ export default function SideBar() {
         })}
       />
       <Box
-        className="Sidebar-overlay"
+        className='Sidebar-overlay'
         sx={{
           position: 'fixed',
           zIndex: 9998,
@@ -114,10 +112,10 @@ export default function SideBar() {
         onClick={() => closeSidebar()}
       />
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-        <IconButton variant="soft" color="primary" size="sm">
+        <IconButton variant='soft' color='primary' size='sm'>
           <BrightnessAutoRoundedIcon />
         </IconButton>
-        <Typography level="title-lg">Transcriber</Typography>
+        <Typography level='title-lg'>Transcriber</Typography>
         <ColorSchemeToggle sx={{ ml: 'auto' }} />
       </Box>
       <Box
@@ -133,7 +131,7 @@ export default function SideBar() {
         }}
       >
         <List
-          size="sm"
+          size='sm'
           sx={{
             gap: 1,
             '--List-nestedInsetStart': '30px',
@@ -141,62 +139,43 @@ export default function SideBar() {
           }}
         >
           <ListItem>
-            <Link to="/home" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link to='/home' style={{ textDecoration: 'none', color: 'inherit' }}>
               <ListItemButton>
                 <HomeRoundedIcon />
                 <ListItemContent>
-                  <Typography level="title-sm">Home</Typography>
-                </ListItemContent>
-            </ListItemButton>
-            </Link>
-          </ListItem>
-          <ListItem>
-            <Link to="/transcription" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <ListItemButton>
-                <GraphicEqIcon />
-                <ListItemContent>
-                  <Typography level="title-sm">Transcription</Typography>
+                  <Typography level='title-sm'>Home</Typography>
                 </ListItemContent>
               </ListItemButton>
             </Link>
           </ListItem>
-
           <ListItem>
-            <ListItemButton
-              role="menuitem"
-              component="a"
-              href="/home"
-            >
-              <QuestionAnswerRoundedIcon />
-              <ListItemContent>
-                <Typography level="title-sm">Messages</Typography>
-              </ListItemContent>
-              <Chip size="sm" color="primary" variant="solid">
-                4
-              </Chip>
-            </ListItemButton>
+            <Link to='/transcriptions' style={{ textDecoration: 'none', color: 'inherit' }}>
+              <ListItemButton>
+                <GraphicEqIcon />
+                <ListItemContent>
+                  <Typography level='title-sm'>Transcription</Typography>
+                </ListItemContent>
+              </ListItemButton>
+            </Link>
           </ListItem>
-
           <ListItem nested>
             <Toggler
               renderToggle={({ open, setOpen }) => (
                 <ListItemButton onClick={() => setOpen(!open)}>
                   <GroupRoundedIcon />
                   <ListItemContent>
-                    <Typography level="title-sm">Users</Typography>
+                    <Typography level='title-sm'>Users</Typography>
                   </ListItemContent>
-                  <KeyboardArrowDownIcon
-                    sx={{ transform: open ? 'rotate(180deg)' : 'none' }}
-                  />
+                  <KeyboardArrowDownIcon sx={{ transform: open ? 'rotate(180deg)' : 'none' }} />
                 </ListItemButton>
               )}
             >
               <List sx={{ gap: 0.5 }}>
                 <ListItem sx={{ mt: 0.5 }}>
                   <ListItemButton
-                    role="menuitem"
-                    component="a"
-                    href="/joy-ui/getting-started/templates/profile-dashboard/"
+                    role='menuitem'
+                    component='a'
+                    href='/joy-ui/getting-started/templates/profile-dashboard/'
                   >
                     My profile
                   </ListItemButton>
@@ -213,7 +192,7 @@ export default function SideBar() {
         </List>
 
         <List
-          size="sm"
+          size='sm'
           sx={{
             mt: 'auto',
             flexGrow: 0,
@@ -239,15 +218,15 @@ export default function SideBar() {
       <Divider />
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
         <Avatar
-          variant="outlined"
-          size="sm"
-          src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=286"
+          variant='outlined'
+          size='sm'
+          src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=286'
         />
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography level="title-sm">Siriwat K.</Typography>
-          <Typography level="body-xs">siriwatk@test.com</Typography>
+          <Typography level='title-sm'>Siriwat K.</Typography>
+          <Typography level='body-xs'>siriwatk@test.com</Typography>
         </Box>
-        <IconButton size="sm" variant="plain" color="neutral">
+        <IconButton size='sm' variant='plain' color='neutral'>
           <LogoutRoundedIcon />
         </IconButton>
       </Box>

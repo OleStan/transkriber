@@ -3,13 +3,13 @@
     <% @transcription.transcription_json.each do |transcription| %>
       <% transcription['segments'].each do |segment| %>
         <div class="flex items-start">
-          <span class="mr-4 w-1/6 text-gray-500 select-none"><%= segment_timestemp(segment) %></span>
+          <span class="mr-4 w-1/6 text-gray-500 select-none"><%= segment_timestamp(segment) %></span>
           <div class="text w-5/6 prose pl-4"><%= segment['text'] %></div>
         </div>
       <% end %>
     <% end %>
   </div>
-  <%= text_area_tag :result, @transcription.result,
+  <%= text_area_tag :result, @transcription.transcription,
                     data: {'clipboard-target': 'toCopy'},
                     class: 'display-none' %>
 <% end %>

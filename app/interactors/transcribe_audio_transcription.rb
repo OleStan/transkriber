@@ -11,7 +11,7 @@ class TranscribeAudioTranscription < ActiveInteractor::Base
 
     context.json_transcription = transcribe_audio
 
-    context.audio_transcription.update(result: text_from_audio, transcription_json: context.json_transcription)
+    context.audio_transcription.update(transcription: text_from_audio, transcription_json: context.json_transcription)
   end
 
   private

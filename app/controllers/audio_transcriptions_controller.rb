@@ -24,10 +24,10 @@ class AudioTranscriptionsController < ApplicationController
     #
     # text_from_audio = @transcription.transcribe_audio.join
     #
-    # @transcription.update(result: text_from_audio)
+    # @transcription.update(transcription: text_from_audio)
 
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.update("result_div", partial: "audio_transcriptions/result", locals: { result: @transcription.result }) }
+      format.turbo_stream { render turbo_stream: turbo_stream.update("result_div", partial: "audio_transcriptions/result", locals: { transcription: @transcription.result }) }
     end
   end
 

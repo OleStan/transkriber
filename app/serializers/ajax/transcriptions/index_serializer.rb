@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-
 class Ajax::Transcriptions::IndexSerializer < ActiveModel::Serializer
   attributes :id, :audio_filename, :created_at_formatted, :audio_transcription_path
 

@@ -8,57 +8,56 @@
 
 */
 @layer components {
-    div[role="navigation"] {
-        display: flex;
-        justify-content: center;
-        margin-top: 2rem;
-    }
+  div[role="navigation"] {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
 
-    div[role="navigation"] a {
-        color: #000;
-        text-decoration: none;
-        border: 1px solid #dcfce7;
-        padding: 0.5rem 1rem;
-        margin: 0 0.5rem;
-    }
+  div[role="navigation"] a {
+    color: #000;
+    text-decoration: none;
+    border: 1px solid #dcfce7;
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+  }
 
-    div[role="navigation"] a:hover {
-        background-color: #dcfce7;
-        color: black;
-    }
+  div[role="navigation"] a:hover {
+    background-color: #dcfce7;
+    color: black;
+  }
 
-    div[role="navigation"] .current {
-        background-color: #dcfce7;
-        color: black;
-        border: 1px solid #dcfce7;
-        padding: 0.5rem 1rem;
-        margin: 0 0.5rem;
-    }
+  div[role="navigation"] .current {
+    background-color: #dcfce7;
+    color: black;
+    border: 1px solid #dcfce7;
+    padding: 0.5rem 1rem;
+    margin: 0 0.5rem;
+  }
 
-    a.previous_page,
-    a.next_page,
-    a[rel="prev"],
-    a[rel="next"] {
-        color: black;
-        padding: 0.5rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 0.25rem;
-    }
+  a.previous_page,
+  a.next_page,
+  a[rel="prev"],
+  a[rel="next"] {
+    color: black;
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.25rem;
+  }
 
-    a.previous_page:hover,
-    a.next_page:hover,
-    a[rel="prev"]:hover,
-    a[rel="next"]:hover {
-        color: black;
-        background-color: #dcfce7;
-    }
+  a.previous_page:hover,
+  a.next_page:hover,
+  a[rel="prev"]:hover,
+  a[rel="next"]:hover {
+    color: black;
+    background-color: #dcfce7;
+  }
 
-    a.current {
-        color: black;
-        background-color: #dcfce7;
-        padding: 0.5rem;
-        border: 1px solid #dcfce7;
-        border-radius: 0.25rem;
-    }
-
+  a.current {
+    color: black;
+    background-color: #dcfce7;
+    padding: 0.5rem;
+    border: 1px solid #dcfce7;
+    border-radius: 0.25rem;
+  }
 }

@@ -3,6 +3,8 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "articles#index"
+
+
   root "pages#index"
   resources :audio_transcriptions do
     post :transcribe, on: :member

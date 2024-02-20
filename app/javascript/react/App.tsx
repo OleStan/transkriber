@@ -1,35 +1,22 @@
-import { useState } from 'react'
-
-import SideBar from "./components/layout/SideBar";
-
 import { CssVarsProvider } from '@mui/joy/styles';
 import CssBaseline from '@mui/joy/CssBaseline';
 import Box from '@mui/joy/Box';
-import Button from '@mui/joy/Button';
-import Breadcrumbs from '@mui/joy/Breadcrumbs';
-import Link from '@mui/joy/Link';
-import Typography from '@mui/joy/Typography';
 
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
-import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
-
-import Sidebar from './components/layout/Sidebar';
+import Sidebar from './components/layout/SideBar';
 import Header from './components/layout/Header';
 
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom';
 
 function App() {
-
   return (
     <CssVarsProvider disableTransitionOnChange>
       <CssBaseline />
       <Box sx={{ display: 'flex', minHeight: '100dvh' }}>
-        <Header />
         <Sidebar />
+        <Header />
         <Box
-          component="main"
-          className="MainContent"
+          component='main'
+          className='MainContent'
           sx={{
             px: { xs: 2, md: 6 },
             pt: {
@@ -44,13 +31,14 @@ function App() {
             minWidth: 0,
             height: '100dvh',
             gap: 1,
+            overflow: 'auto',
           }}
         >
-        <Outlet />
+          <Outlet />
         </Box>
       </Box>
     </CssVarsProvider>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -6,4 +6,10 @@ class Ajax::TranscriptionsController < ApplicationController
 
     render json: @transcriptions, each_serializer: Ajax::Transcriptions::IndexSerializer
   end
+
+  def show
+    @transcription = AudioTranscription.find(params[:id])
+
+    render json: @transcription, serializer: Ajax::Transcriptions::ShowSerializer
+  end
 end
