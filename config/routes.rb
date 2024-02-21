@@ -11,7 +11,7 @@ Rails.application.routes.draw do
   end
 
   namespace :ajax do
-    resources :transcriptions, only: %i[index show]
+    resources :transcriptions, only: %i[index show create]
   end
 
 end

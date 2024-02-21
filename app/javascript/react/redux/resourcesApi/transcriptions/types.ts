@@ -2,9 +2,14 @@ export interface ITranscription {
   id: number;
   audioFilename: string | null; // CamelCase for consistency
   createdAtFormatted: string; // CamelCase for consistency
+  status: string;
+  duration: string;
 }
 
 export interface ITranscriptionsResponse {
+  page: number;
+  total_pages: number;
+  total_count: number;
   transcriptions: ITranscription[];
 }
 

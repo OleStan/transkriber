@@ -49,7 +49,7 @@ gem "ruby-openai"
 gem 'figaro'
 
 # pagination
-gem 'will_paginate', '~> 3.3'
+gem 'kaminari'
 
 # Zappa is a high level audio manipulation library for Ruby, inspired by pydub.
 #gem 'zappa'
@@ -62,7 +62,7 @@ gem 'vite_rails'
 
 # http request helper
 gem 'active_model_serializers'
-
+gem 'react_on_rails'
 # Use Sass to process CSS
 # gem "sassc-rails"
 

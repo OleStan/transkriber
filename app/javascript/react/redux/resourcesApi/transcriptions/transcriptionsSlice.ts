@@ -1,6 +1,10 @@
+import ReactOnRails from 'react-on-rails';
+
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { ITranscriptionsResponse, ITranscriptionDetailsResponse } from './types';
 import { toCamelCase } from '../../utils';
+
+const token = ReactOnRails.authenticityToken();
 
 export const transcriptionsSlice = createApi({
   reducerPath: 'transcriptionsApi',
@@ -16,8 +20,19 @@ export const transcriptionsSlice = createApi({
       query: (page: number) => `transcriptions?page=${page}`,
       transformResponse: (response: ITranscriptionsResponse) => toCamelCase(response),
     }),
+    createTranscription: builder.mutation<void, FormData>({
+      query: (formData) => ({
+        url: 'transcriptions',
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRF-Token': ReactOnRails.authenticityToken(),
+        },
+      }),
+      transformResponse: (response: ITranscriptionDetailsResponse) => toCamelCase(response),
+    }),
   }),
 });
 
 // Export auto-generated hooks for the endpoints
-export const { useGetTranscriptionQuery, useGetTranscriptionsQuery } = transcriptionsSlice;
+export const { useGetTranscriptionQuery, useGetTranscriptionsQuery, useCreateTranscriptionMutation } = transcriptionsSlice;

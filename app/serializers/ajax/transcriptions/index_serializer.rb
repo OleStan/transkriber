@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class Ajax::Transcriptions::IndexSerializer < ActiveModel::Serializer
-  attributes :id, :audio_filename, :created_at_formatted, :audio_transcription_path
+  attributes :id, :audio_filename, :created_at_formatted, :audio_transcription_path, :status,
+             :duration
 
   def audio_filename
     object.audio.blob.filename.to_s if object.audio.attached?
@@ -12,5 +13,14 @@ class Ajax::Transcriptions::IndexSerializer < ActiveModel::Serializer
 
   def audio_transcription_path
     Rails.application.routes.url_helpers.audio_transcription_path(object)
+  end
+
+
+  def status
+    'Done'# calculate status
+  end
+
+  def duration
+    '20m 30s' # calculate duration
   end
 end

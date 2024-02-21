@@ -1,14 +1,10 @@
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins '*'
-    # resource '*',
-    #          headers: :any,
-    #          methods: [:get, :post, :put, :patch, :delete, :options, :head],
-    #          expose: ['Content-Disposition']
+    origins 'http://localhost:5173'
     resource "*",
              headers: :any,
-             methods: [:get, :post, :put, :patch, :delete, :options, :head]
-
+             methods: [:get, :post, :put, :patch, :delete, :options, :head],
+             credentials: false
     # resource '/rails/active_storage/*', headers: :any, methods: [:get], credentials: false
   end
 end

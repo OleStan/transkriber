@@ -1,8 +1,9 @@
 class AudioTranscription < ApplicationRecord
   has_one_attached :audio
+  # TODO: add validation to format of audio files
   default_scope { order(created_at: :desc) }
 
-  self.per_page = 10
+  paginates_per 10
 
   def audio_on_disk
     ActiveStorage::Blob.service.path_for(audio.key)

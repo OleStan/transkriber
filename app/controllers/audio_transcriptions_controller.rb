@@ -2,7 +2,7 @@ class AudioTranscriptionsController < ApplicationController
   before_action :find_audio_transcription, only: %i[transcribe show]
 
   def index
-    @transcriptions = AudioTranscription.paginate(page: params[:page])
+    @transcriptions = AudioTranscription.page(params[:page])
   end
 
   def show; end
