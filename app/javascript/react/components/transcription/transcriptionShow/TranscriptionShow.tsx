@@ -28,10 +28,10 @@ const TranscriptionShow = () => {
       <h1>Transcriptions {data?.id}</h1>
       <AudioPlayer src={transcription.audioTranscriptionPath} />
 
-      <TranscriptionShowTranscription transcriptionSegments={transcription.transcriptions} />
-      {transcription.id}
-      {transcription.audioFilename}
-      {transcription.createdAtFormatted}
+      {/*<TranscriptionShowTranscription transcriptionSegments={transcription.transcriptions} />*/}
+      {/*{transcription.id}*/}
+      {/*{transcription.audioFilename}*/}
+      {/*{transcription.createdAtFormatted}*/}
     </>
   );
 };

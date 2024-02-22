@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, {useState} from 'react';
 import { Link } from 'react-router-dom';
 import GlobalStyles from '@mui/joy/GlobalStyles';
 import Avatar from '@mui/joy/Avatar';
@@ -26,7 +26,7 @@ import GraphicEqIcon from '@mui/icons-material/GraphicEq';
 import ColorSchemeToggle from './ColorSchemeToggle';
 import { closeSidebar } from './utils';
 
-function Toggler({
+const Toggler = ({
   defaultExpanded = false,
   renderToggle,
   children,
@@ -37,7 +37,7 @@ function Toggler({
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   }) => React.ReactNode;
-}) {
+}) => {
   const [open, setOpen] = React.useState(defaultExpanded);
   return (
     <React.Fragment>
@@ -58,7 +58,7 @@ function Toggler({
   );
 }
 
-export default function SideBar() {
+const SideBar = () => {
   return (
     <Sheet
       className='Sidebar'
@@ -233,3 +233,5 @@ export default function SideBar() {
     </Sheet>
   );
 }
+
+export default SideBar;

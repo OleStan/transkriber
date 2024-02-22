@@ -58,11 +58,11 @@ gem "ffmpeg"
 gem "open3"
 gem "streamio-ffmpeg"
 
+gem 'vite_ruby'
 gem 'vite_rails'
 
 # http request helper
 gem 'active_model_serializers'
-gem 'react_on_rails'
 # Use Sass to process CSS
 # gem "sassc-rails"
 

@@ -1,11 +1,11 @@
-import * as React from "react";
-import { useColorScheme } from "@mui/joy/styles";
-import IconButton, { IconButtonProps } from "@mui/joy/IconButton";
+import React from 'react';
+import { useColorScheme } from '@mui/joy/styles';
+import IconButton, { IconButtonProps } from '@mui/joy/IconButton';
 
-import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
-import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeIcon from '@mui/icons-material/LightMode';
 
-export default function ColorSchemeToggle(props: IconButtonProps) {
+const ColorSchemeToggle = (props: IconButtonProps) => {
   const { onClick, sx, ...other } = props;
   const { mode, setMode } = useColorScheme();
   const [mounted, setMounted] = React.useState(false);
@@ -13,39 +13,30 @@ export default function ColorSchemeToggle(props: IconButtonProps) {
     setMounted(true);
   }, []);
   if (!mounted) {
-    return (
-      <IconButton
-        size="sm"
-        variant="outlined"
-        color="neutral"
-        {...other}
-        sx={sx}
-        disabled
-      />
-    );
+    return <IconButton size='sm' variant='outlined' color='neutral' {...other} sx={sx} disabled />;
   }
   return (
     <IconButton
-      id="toggle-mode"
-      size="sm"
-      variant="outlined"
-      color="neutral"
+      id='toggle-mode'
+      size='sm'
+      variant='outlined'
+      color='neutral'
       {...other}
       onClick={(event) => {
-        if (mode === "light") {
-          setMode("dark");
+        if (mode === 'light') {
+          setMode('dark');
         } else {
-          setMode("light");
+          setMode('light');
         }
         onClick?.(event);
       }}
       sx={[
         {
-          "& > *:first-child": {
-            display: mode === "dark" ? "none" : "initial",
+          '& > *:first-child': {
+            display: mode === 'dark' ? 'none' : 'initial',
           },
-          "& > *:last-child": {
-            display: mode === "light" ? "none" : "initial",
+          '& > *:last-child': {
+            display: mode === 'light' ? 'none' : 'initial',
           },
         },
         ...(Array.isArray(sx) ? sx : [sx]),
@@ -55,4 +46,6 @@ export default function ColorSchemeToggle(props: IconButtonProps) {
       <LightModeIcon />
     </IconButton>
   );
-}
+};
+
+export default ColorSchemeToggle;

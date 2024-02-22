@@ -4,7 +4,8 @@ class Ajax::Transcriptions::ShowSerializer < ActiveModel::Serializer
   include Rails.application.routes.url_helpers
   include AudioTranscriptionHelper
 
-  attributes :id, :audio_filename, :created_at_formatted, :audio_transcription_path, :transcriptions
+  # attributes :id, :audio_filename, :created_at_formatted, :audio_transcription_path, :transcriptions
+  attributes :audio_transcription_path
 
   def audio_filename
     object.audio.blob.filename.to_s if object.audio.attached?

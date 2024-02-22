@@ -19,19 +19,14 @@ class Ajax::TranscriptionsController < ApplicationController
   end
 
   def create
+    binding.pry
     @transcription = AudioTranscription.new(transcriptions_params)
+
 
     if @transcription.save
       render json: { data: 'success' }
     else
       render json: { data: 'error' }
     end
-    # respond_to do |format|
-    #   if @transcription.save
-    #     format.html { redirect_to audio_transcription_path(@transcription) }
-    #   else
-    #     format.html { redirect_to root_path }
-    #   end
-    # end
   end
 end

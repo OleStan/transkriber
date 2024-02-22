@@ -15,7 +15,7 @@ import Header from './components/layout/Header';
 
 import { Outlet } from 'react-router-dom';
 
-function App() {
+const App = () => {
   return (
     <MaterialCssVarsProvider theme={{ [MATERIAL_THEME_ID]: materialTheme }}>
       <JoyCssVarsProvider disableTransitionOnChange>
@@ -49,6 +49,6 @@ function App() {
       </JoyCssVarsProvider>
     </MaterialCssVarsProvider>
   );
-}
+};
 
 export default App;

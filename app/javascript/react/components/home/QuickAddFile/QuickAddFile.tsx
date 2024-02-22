@@ -11,8 +11,7 @@ const QuickAddFile = () => {
 
   const handleFileUpload = (file: File) => {
     const formData = new FormData();
-    formData.append('file', file);
-    console.log('formData', formData);
+    formData.append('audio_transcription[audio]', file);
     createTranscription(formData).unwrap()
       .then((response) => {
         console.log('success');
