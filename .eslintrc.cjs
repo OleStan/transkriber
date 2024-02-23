@@ -13,9 +13,5 @@ module.exports = {
   plugins: ["react", "react-hooks", "@typescript-eslint", "prettier", "import"],
   rules: {
     "prettier/prettier": "error",
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ]
   },
 };

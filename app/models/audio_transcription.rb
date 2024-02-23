@@ -16,9 +16,9 @@ class AudioTranscription < ApplicationRecord
   private
 
   def raw_command_to_system
-    language = "Ukrainian"
-    filename = ""
-    model = "medium"
+    language = 'Ukrainian'
+    filename = ''
+    model = 'medium'
     command = "whisper #{filename} --model #{model} --language #{language}"
   end
 end

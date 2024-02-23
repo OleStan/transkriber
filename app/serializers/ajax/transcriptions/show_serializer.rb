@@ -12,11 +12,11 @@ class Ajax::Transcriptions::ShowSerializer < ActiveModel::Serializer
   end
 
   def created_at_formatted
-    object.created_at.strftime("%d.%m.%Y %H:%M")
+    object.created_at.strftime('%d.%m.%Y %H:%M')
   end
 
   def audio_transcription_path
-    'http://localhost:3000' + rails_blob_url(object.audio, only_path: true) # ToDo: Change to ENV['HOST'] add metho to generate url
+    'http://localhost:3000' + rails_blob_url(object.audio, only_path: true) # TODO: Change to ENV['HOST'] add metho to generate url
   end
 
   def transcriptions
@@ -24,6 +24,7 @@ class Ajax::Transcriptions::ShowSerializer < ActiveModel::Serializer
   end
 
   private
+
   def parse_transcription
     return map_segments(object.transcription_json) if object.transcription_json.is_a?(Hash)
 

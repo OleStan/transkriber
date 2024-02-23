@@ -3,7 +3,5 @@ class PagesController < ApplicationController
     @transcription = AudioTranscription.new
   end
 
-  def root
-
-  end
+  def root; end
 end

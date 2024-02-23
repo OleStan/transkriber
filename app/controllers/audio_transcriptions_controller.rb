@@ -19,7 +19,7 @@ class AudioTranscriptionsController < ApplicationController
   end
 
   def transcribe
-    @result = TranscribeAudioTranscription.new(id: params[:id]).perform
+    @result = AudioTranscription::Transcribe.new(id: params[:id]).perform
 
     #
     # text_from_audio = @transcription.transcribe_audio.join
@@ -27,7 +27,10 @@ class AudioTranscriptionsController < ApplicationController
     # @transcription.update(transcription: text_from_audio)
 
     respond_to do |format|
-      format.turbo_stream { render turbo_stream: turbo_stream.update("result_div", partial: "audio_transcriptions/result", locals: { transcription: @transcription.result }) }
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.update('result_div', partial: 'audio_transcriptions/result',
+                                                               locals: { transcription: @transcription.result })
+      end
     end
   end
 

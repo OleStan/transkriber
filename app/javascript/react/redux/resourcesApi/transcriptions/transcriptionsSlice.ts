@@ -1,9 +1,9 @@
 import ReactOnRails from 'react-on-rails';
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { ITranscriptionsResponse, ITranscriptionDetailsResponse } from './types';
 import { toCamelCase } from '../../utils';
-
+import { getCsrfTokenHeader } from '../../shared/headers';
+import { ITranscriptionDetailsResponse, ITranscriptionsResponse } from './types';
 const token = ReactOnRails.authenticityToken();
 
 export const transcriptionsSlice = createApi({
@@ -35,4 +35,8 @@ export const transcriptionsSlice = createApi({
 });
 
 // Export auto-generated hooks for the endpoints
-export const { useGetTranscriptionQuery, useGetTranscriptionsQuery, useCreateTranscriptionMutation } = transcriptionsSlice;
+export const {
+  useGetTranscriptionQuery,
+  useGetTranscriptionsQuery,
+  useCreateTranscriptionMutation,
+} = transcriptionsSlice;

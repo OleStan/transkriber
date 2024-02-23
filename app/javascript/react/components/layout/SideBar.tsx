@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import GlobalStyles from '@mui/joy/GlobalStyles';
 import Avatar from '@mui/joy/Avatar';
@@ -56,7 +56,7 @@ const Toggler = ({
       </Box>
     </React.Fragment>
   );
-}
+};
 
 const SideBar = () => {
   return (
@@ -69,7 +69,7 @@ const SideBar = () => {
           md: 'none',
         },
         transition: 'transform 0.4s, width 0.4s',
-        zIndex: 10000,
+        zIndex: 3,
         height: '100dvh',
         width: 'var(--Sidebar-width)',
         top: 0,
@@ -232,6 +232,6 @@ const SideBar = () => {
       </Box>
     </Sheet>
   );
-}
+};
 
 export default SideBar;

@@ -5,7 +5,8 @@ class Ajax::TranscriptionsController < ApplicationController
     @transcriptions = AudioTranscription.select(:id, :created_at).page(params[:page])
 
     render json: {
-      transcriptions: ActiveModel::SerializableResource.new(@transcriptions, each_serializer: Ajax::Transcriptions::IndexSerializer),
+      transcriptions: ActiveModel::SerializableResource.new(@transcriptions,
+                                                            each_serializer: Ajax::Transcriptions::IndexSerializer),
       page: params[:page].to_i,
       total_pages: @transcriptions.total_pages,
       total_count: @transcriptions.total_count
@@ -19,14 +20,18 @@ class Ajax::TranscriptionsController < ApplicationController
   end
 
   def create
-    binding.pry
-    @transcription = AudioTranscription.new(transcriptions_params)
+    @result = AudioTranscription::Create.new(audio: transcriptions_params[:audio]).perform
 
-
-    if @transcription.save
+    if @result.save
       render json: { data: 'success' }
     else
       render json: { data: 'error' }
     end
+  end
+
+  private
+
+  def transcriptions_params
+    params.require(:audio_transcription).permit(:audio)
   end
 end
