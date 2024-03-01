@@ -4,11 +4,13 @@ class Ajax::Transcriptions::ShowSerializer < ActiveModel::Serializer
   include Rails.application.routes.url_helpers
   include AudioTranscriptionHelper
 
-  # attributes :id, :audio_filename, :created_at_formatted, :audio_transcription_path, :transcriptions
-  attributes :audio_transcription_path
+  attributes :id, :audio_filename, :status, :created_at_formatted, :audio_transcription_path, :transcriptions
 
   def audio_filename
-    object.audio.blob.filename.to_s if object.audio.attached?
+    return object.title if object.title.present?
+    return object.audio.blob.filename.to_s if object.audio.attached?
+
+    'No title'
   end
 
   def created_at_formatted
@@ -16,10 +18,15 @@ class Ajax::Transcriptions::ShowSerializer < ActiveModel::Serializer
   end
 
   def audio_transcription_path
-    'http://localhost:3000' + rails_blob_url(object.audio, only_path: true) # TODO: Change to ENV['HOST'] add metho to generate url
+    return unless object.audio.attached?
+
+    # TODO: Change to ENV['HOST'] add metho to generate url
+    "http://localhost:3000#{rails_blob_url(object.audio, only_path: true)}"
   end
 
   def transcriptions
+    return if object.transcription_json.nil?
+
     parse_transcription
   end
 

@@ -1,14 +1,14 @@
-class AudioTranscriptionsController < ApplicationController
+class TranscriptionsController < ApplicationController
   before_action :find_audio_transcription, only: %i[transcribe show]
 
   def index
-    @transcriptions = AudioTranscription.page(params[:page])
+    @transcriptions = Transcription.page(params[:page])
   end
 
   def show; end
 
   def create
-    @transcription = AudioTranscription.new(transcriptions_params)
+    @transcription = Transcription.new(transcriptions_params)
     respond_to do |format|
       if @transcription.save
         format.html { redirect_to audio_transcription_path(@transcription) }
@@ -19,7 +19,7 @@ class AudioTranscriptionsController < ApplicationController
   end
 
   def transcribe
-    @result = AudioTranscription::Transcribe.new(id: params[:id]).perform
+    @result = Transcriptions::Transcribe.new(id: params[:id]).perform
 
     #
     # text_from_audio = @transcription.transcribe_audio.join
@@ -37,10 +37,10 @@ class AudioTranscriptionsController < ApplicationController
   private
 
   def find_audio_transcription
-    @transcription = AudioTranscription.find(params[:id])
+    @transcription = Transcription.find(params[:id])
   end
 
   def transcriptions_params
-    params.require(:audio_transcription).permit(:audio)
+    params.require(:audio_transcription).permit(:audio, :language)
   end
 end

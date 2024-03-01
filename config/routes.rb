@@ -1,11 +1,17 @@
+require 'sidekiq/web'
+
 Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
+  mount ActionCable.server => '/cable'
+
+  mount Sidekiq::Web => '/sidekiq'
 
   # Defines the root path route ("/")
   # root "articles#index"
   # post '/login', to: "sessions#create"
   # get '/login', to: "sessions#show"
   # react routes
+
   controller :pages do
     get '/', to: 'pages#root'
     get '/home', to: 'pages#root'
@@ -17,7 +23,7 @@ Rails.application.routes.draw do
 
 
 
-  resources :audio_transcriptions do
+  resources :transcriptions do
     post :transcribe, on: :member
   end
 

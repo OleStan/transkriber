@@ -33,12 +33,12 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     []
   );
 
-  // const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
-  //   if (reason === 'clickaway') {
-  //     return;
-  //   }
-  //   setOpen(false);
-  // };
+  const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setOpen(false);
+  };
 
   return (
     <NotificationContext.Provider value={{ showNotification }}>
@@ -49,7 +49,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         variant={'soft'}
         color={color}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        // onClose={handleClose}
+        onClose={handleClose}
       >
         {message}
       </Snackbar>

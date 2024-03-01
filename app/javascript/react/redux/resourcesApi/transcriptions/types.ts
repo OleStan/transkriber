@@ -1,7 +1,7 @@
 export interface ITranscription {
   id: number;
-  audioFilename: string | null; // CamelCase for consistency
-  createdAtFormatted: string; // CamelCase for consistency
+  audioFilename: string | null;
+  createdAtFormatted: string;
   status: string;
   duration: string;
 }
@@ -29,3 +29,22 @@ export interface ITranscriptionDetails extends ITranscription {
 export interface ITranscriptionDetailsResponse {
   transcriptions: ITranscriptionDetails[];
 }
+
+export interface ITranscriptionCreateSuccess {
+  transcriptionId: number;
+}
+
+export interface ITranscriptionCreateError {
+  error: boolean;
+  errorMessage: string;
+}
+
+export type CreateTranscriptionResponse = ITranscriptionCreateSuccess | ITranscriptionCreateError;
+
+export type IsError = (
+  response: CreateTranscriptionResponse
+) => response is ITranscriptionCreateError;
+
+export const isError: IsError = (response): response is ITranscriptionCreateError => {
+  return (response as ITranscriptionCreateError).errorMessage !== undefined;
+};

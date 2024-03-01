@@ -1,6 +1,6 @@
 class PagesController < ApplicationController
   def index
-    @transcription = AudioTranscription.new
+    @transcription = Transcription.new
   end
 
   def root; end

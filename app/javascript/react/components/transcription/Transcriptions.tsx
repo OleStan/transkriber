@@ -1,12 +1,13 @@
 import React from 'react';
 import { useGetTranscriptionsQuery } from '../../redux/resourcesApi/transcriptions/transcriptionsSlice';
-import { ITranscriptionDetails } from '../../../redux/resourcesApi/transcriptions/types';
+// import { ITranscriptionDetails } from '../../../redux/resourcesApi/transcriptions/types';
 import { useSearchParams } from 'react-router-dom';
 import Typography from '@mui/joy/Typography';
 import CircularProgress from '@mui/joy/CircularProgress';
 import Stack from '@mui/joy/Stack';
+import useActionCable from '../../hooks/useActionCable';
 
-import TemplateOutlineRow from './transcriptionOutlineRow/TemplateOutlineRow';
+// import TemplateOutlineRow from './transcriptionOutlineRow/TemplateOutlineRow';
 import { Pagination } from '@mui/material';
 import TranscriptionsTable from './transcriptionsTable/TranscriptionsTable';
 
@@ -14,6 +15,7 @@ const Transcriptions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   const [currentPage, setCurrentPage] = React.useState(initialPage);
+  const messages = useActionCable('TranscriptionChannel', 'Room1');
 
   const { data: transcriptions, error, isLoading } = useGetTranscriptionsQuery(currentPage);
 
@@ -43,19 +45,17 @@ const Transcriptions = () => {
   return (
     <Stack spacing={2}>
       <Typography level='h4' component='h1' sx={{ mb: 2 }}>
-        All Transcriptions
       </Typography>
-
       {/*<Stack direction='column' spacing={2}>*/}
       {/*  {transcriptions?.transcriptions.map((transcription: ITranscriptionDetails) => (*/}
       {/*    <TemplateOutlineRow key={transcription.id} {...transcription} />*/}
       {/*  ))}*/}
       {/*</Stack>*/}
       <TranscriptionsTable transcriptions={transcriptions?.transcriptions} />
-      {transcriptions?.total_pages > 1 && (
+      {transcriptions?.totalPages > 1 && (
         <Stack direction='row' spacing={2} justifyContent='center' mt={2}>
           <Pagination
-            count={transcriptions?.total_pages}
+            count={transcriptions?.totalPages}
             page={currentPage}
             onChange={handlePageChange}
           />

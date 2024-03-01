@@ -11,6 +11,7 @@ import Typography from '@mui/joy/Typography';
 
 interface AudioPlayerProps {
   src: string;
+
 }
 
 const formatTime = (seconds: number): string => {

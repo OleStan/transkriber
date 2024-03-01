@@ -2,15 +2,20 @@ import QuickAddFile from './QuickAddFile/QuickAddFile';
 import Box from '@mui/joy/Box';
 import Typography from '@mui/joy/Typography';
 import Stack from '@mui/joy/Stack';
+import Grid from '@mui/joy/Grid';
 
 const Home = () => {
   return (
-    <Stack spacing={16}>
-      {
-        // Card to add new transcription. User can click on it or drug on it file
-        // Box with last transcriptions
-      }
+    <Stack spacing={4} sx={{ flexGrow: 1 }}>
+      {/*<Grid container>*/}
+      {/*  <Grid xs={6} md={6}>*/}
+      {/*    <Typography variant={'outlined'}>Home</Typography>*/}
+      {/*  </Grid>*/}
+      {/*  <Grid xs={6} md={6}>*/}
+      {/*  </Grid>*/}
+      {/*</Grid>*/}
       <QuickAddFile />
+
       <Box>
         <Typography>*Table with last transcriptions*</Typography>
       </Box>

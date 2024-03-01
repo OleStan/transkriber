@@ -1,37 +1,39 @@
 # frozen_string_literal: true
 
 class Ajax::TranscriptionsController < ApplicationController
-  def index
-    @transcriptions = AudioTranscription.select(:id, :created_at).page(params[:page])
 
-    render json: {
-      transcriptions: ActiveModel::SerializableResource.new(@transcriptions,
-                                                            each_serializer: Ajax::Transcriptions::IndexSerializer),
-      page: params[:page].to_i,
-      total_pages: @transcriptions.total_pages,
-      total_count: @transcriptions.total_count
-    }
+  def index
+    result = Transcriptions::Index.perform(page: params[:page])
+
+    if result.success?
+      render json: result.data
+    else
+      render json: { data: result.errors.full_messages.join(', ') }
+    end
   end
 
   def show
-    @transcription = AudioTranscription.find(params[:id])
+    transcription = Transcription.find(params[:id])
 
-    render json: @transcription, serializer: Ajax::Transcriptions::ShowSerializer
+    render json: transcription, serializer: Ajax::Transcriptions::ShowSerializer
   end
 
   def create
-    @result = AudioTranscription::Create.new(audio: transcriptions_params[:audio]).perform
+    result = Transcriptions::Create.perform(
+      audio: transcriptions_params[:audio],
+      language: transcriptions_params[:language]
+    )
 
-    if @result.save
-      render json: { data: 'success' }
+    if result.success?
+      render json: result.data
     else
-      render json: { data: 'error' }
+      render json: result.errors.full_messages.join(', ')
     end
   end
 
   private
 
   def transcriptions_params
-    params.require(:audio_transcription).permit(:audio)
+    params.require(:audio_transcription).permit(:audio, :language)
   end
 end

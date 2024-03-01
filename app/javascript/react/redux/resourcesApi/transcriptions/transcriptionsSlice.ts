@@ -3,7 +3,11 @@ import ReactOnRails from 'react-on-rails';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { toCamelCase } from '../../utils';
 import { getCsrfTokenHeader } from '../../shared/headers';
-import { ITranscriptionDetailsResponse, ITranscriptionsResponse } from './types';
+import {
+  ITranscriptionDetailsResponse,
+  ITranscriptionsResponse,
+  CreateTranscriptionResponse,
+} from './types';
 const token = ReactOnRails.authenticityToken();
 
 export const transcriptionsSlice = createApi({
@@ -25,11 +29,18 @@ export const transcriptionsSlice = createApi({
         url: 'transcriptions',
         method: 'POST',
         body: formData,
+        // headers: getCsrfTokenHeader(), // TODO: to update with actual headers
         headers: {
-          'X-CSRF-Token': ReactOnRails.authenticityToken(),
+          'X-CSRF-Token': token,
         },
       }),
-      transformResponse: (response: ITranscriptionDetailsResponse) => toCamelCase(response),
+      transformResponse: (response: CreateTranscriptionResponse) => {
+        if (response.error || response.errorMessage) {
+          return { errorMessage: response.errorMessage || 'An unknown error occurred' };
+        }
+        const camelCaseResponse = toCamelCase(response);
+        return { transcriptionId: camelCaseResponse.transcriptionId };
+      },
     }),
   }),
 });
