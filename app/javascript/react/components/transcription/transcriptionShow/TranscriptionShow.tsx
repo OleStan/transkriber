@@ -38,14 +38,16 @@ const TranscriptionShow = () => {
     return <TranscriptionShowSkeleton />;
   }
 
-  const transcriptionInProgress =
-    !transcriptionState.isCompleted && ['in_progress', 'pending'].includes(transcription.status);
+  const showInProgress =
+    (['in_progress', 'pending'].includes(transcription.status) && !transcriptionState.isCompleted) &&
+    !transcription.transcriptions;
 
+  console.log(transcription);
   return (
     <>
-      <Typography level={'h1'}>{transcription.title}</Typography>
+      <Typography level='h1'>{transcription.audioFilename}</Typography>
       <AudioPlayer src={transcription.audioTranscriptionPath} />
-      {transcriptionInProgress ? (
+      {showInProgress ? (
         <Stack spacing={2}>
           <Typography level={'body-md'}>
             Your transcription is being processed. Please wait.

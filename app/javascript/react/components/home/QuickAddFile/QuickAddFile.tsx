@@ -7,22 +7,13 @@ import Modal from '@mui/joy/Modal';
 import ModalDialog from '@mui/joy/ModalDialog';
 import DialogContent from '@mui/joy/DialogContent';
 import LanguageSelector from './LanguageSelector'; // Adjust the path as necessary
-import { Language } from './types'; // Adjust the path as necessary
 import { useNotification } from '../../../contexts/NotificationContext';
 import { useAppNavigate } from '../../../helpers/navigationHelpers';
 import { useCreateTranscriptionMutation } from '../../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 import Stack from '@mui/joy/Stack';
 import Box from '@mui/joy/Box';
 
-const languages: Language[] = [
-  { code: 'af', name: 'Afrikaans' },
-  { code: 'ar', name: 'Arabic' },
-  { code: 'zh', name: 'Chinese' },
-  { code: 'en', name: 'English' },
-  { code: 'fr', name: 'French' },
-  { code: 'uk', name: 'Ukrainian' },
-  { code: 'cy', name: 'Welsh' },
-];
+
 const QuickAddFile = () => {
   const [createTranscription] = useCreateTranscriptionMutation();
   const [openDialog, setOpenDialog] = useState(false);
@@ -151,7 +142,6 @@ const QuickAddFile = () => {
               <LanguageSelector
                 language={language}
                 setLanguage={setLanguage}
-                languages={languages}
               />
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
