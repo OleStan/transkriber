@@ -69,7 +69,7 @@ const languages: Language[] = [
 ];
 const LanguageSelector: React.FC<LanguageSelectorProps> = ({ language, setLanguage }) => {
   // Add an "Auto" option to the list of languages for the dropdown.
-  const optionsWithAuto = [{ code: 'auto', name: 'Auto' }, ...languages];
+  const optionsWithAuto = [{ code: 'en', name: 'Auto' }, ...languages];
 
   const handleChange = (event: React.SyntheticEvent, newValue: Language | null) => {
     setLanguage(newValue?.code || 'auto'); // Assuming 'auto' is the code for "Auto"
