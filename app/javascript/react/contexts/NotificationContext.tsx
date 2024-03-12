@@ -44,6 +44,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     <NotificationContext.Provider value={{ showNotification }}>
       {children}
       <Snackbar
+        sx={{ zIndex: 9999 }}
         open={open}
         autoHideDuration={4000}
         variant={'soft'}

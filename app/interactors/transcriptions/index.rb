@@ -18,7 +18,7 @@ class Transcriptions::Index < ActiveInteractor::Base
   delegate :page, :transcriptions, to: :context
 
   def fetch_transcriptions
-    Transcription.select(:id, :created_at, :status, :duration, :title).page(context.page)
+    Transcription.select(:id, :created_at, :status, :duration, :title).order(created_at: :desc).page(context.page)
   end
 
   def serilize_transcriptions

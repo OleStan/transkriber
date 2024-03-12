@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import { Language } from './types';
 
 interface LanguageSelectorProps {
-  language: string;
   setLanguage: React.Dispatch<React.SetStateAction<string>>;
 }
 
@@ -67,25 +66,52 @@ const languages: Language[] = [
   { code: 'vi', name: 'Vietnamese' },
   { code: 'cy', name: 'Welsh' },
 ];
-const LanguageSelector: React.FC<LanguageSelectorProps> = ({ language, setLanguage }) => {
-  // Add an "Auto" option to the list of languages for the dropdown.
-  const optionsWithAuto = [{ code: 'en', name: 'Auto' }, ...languages];
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({ setLanguage }) => {
+  // State to manage the current input value in the autocomplete field
+  const [inputValue, setInputValue] = useState('');
+  // State to manage the currently selected option
+  const [selectedValue, setSelectedValue] = useState<Language | null>(null);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: Language | null) => {
-    setLanguage(newValue?.code || 'auto'); // Assuming 'auto' is the code for "Auto"
+  // Extend your languages list to include an "Auto" option
+  const optionsWithAuto: Language[] = [{ code: 'auto', name: 'Auto' }, ...languages];
+
+  // Load the last selected language or "Auto" from localStorage on component mount
+  useEffect(() => {
+    const lastSelectedLanguageCode = localStorage.getItem('selectedLanguage') || 'auto';
+    const lastSelectedLanguage = optionsWithAuto.find(lang => lang.code === lastSelectedLanguageCode) || optionsWithAuto[0];
+    setSelectedValue(lastSelectedLanguage);
+    // If "Auto" was the last selected, don't preset the input value
+    setInputValue(lastSelectedLanguageCode === 'auto' ? '' : lastSelectedLanguage.name);
+  }, []);
+
+  const handleInputChange = (event: React.SyntheticEvent, newInputValue: string) => {
+    setInputValue(newInputValue);
   };
 
-  // Ensure "Auto" is selected by default or the last selected language is used
-  const defaultValue = optionsWithAuto.find((lang) => lang.code === language) || optionsWithAuto[0];
+  const handleChange = (event: React.SyntheticEvent, newValue: Language | null) => {
+    setSelectedValue(newValue);
+    setLanguage(newValue?.code || 'auto');
+    localStorage.setItem('selectedLanguage', newValue?.code || 'auto');
+    // When a language is selected from the dropdown, update the input value to reflect the selection
+    if (newValue) {
+      setInputValue(newValue.name);
+    }
+  };
 
   return (
     <Autocomplete
-      value={defaultValue}
+      value={selectedValue}
       onChange={handleChange}
+      inputValue={inputValue}
+      onInputChange={handleInputChange}
       options={optionsWithAuto}
       getOptionLabel={(option) => option.name}
-      renderInput={(params) => <TextField {...params} label='Select a language' />}
+      renderInput={(params) => <TextField {...params} label="Select a language" />}
       isOptionEqualToValue={(option, value) => option.code === value.code}
+      // Clear the input value when "Auto" is explicitly selected, allowing user to start typing from the beginning
+      selectOnFocus
+      clearOnBlur
+      handleHomeEndKeys
     />
   );
 };

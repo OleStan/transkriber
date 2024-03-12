@@ -22,8 +22,8 @@ export interface ITranscriptionSegment {
 }
 
 export interface ITranscriptionDetails extends ITranscription {
-  transcriptionSegments: ITranscriptionSegment[]; // Clearer and corrected spelling
-  audioTranscriptionPath: string; // CamelCase for consistency
+  transcriptionSegments: ITranscriptionSegment[];
+  audioTranscriptionPath: string;
 }
 
 export interface ITranscriptionDetailsResponse {
@@ -34,17 +34,19 @@ export interface ITranscriptionCreateSuccess {
   transcriptionId: number;
 }
 
-export interface ITranscriptionCreateError {
+export interface ITranscriptionMutationError {
   error: boolean;
   errorMessage: string;
 }
 
-export type CreateTranscriptionResponse = ITranscriptionCreateSuccess | ITranscriptionCreateError;
+export type CreateTranscriptionResponse = ITranscriptionCreateSuccess | ITranscriptionMutationError;
+
+export type DeleteTranscriptionResponse = ITranscriptionsResponse | ITranscriptionMutationError;
 
 export type IsError = (
   response: CreateTranscriptionResponse
-) => response is ITranscriptionCreateError;
+) => response is ITranscriptionMutationError;
 
-export const isError: IsError = (response): response is ITranscriptionCreateError => {
-  return (response as ITranscriptionCreateError).errorMessage !== undefined;
+export const isError: IsError = (response): response is ITranscriptionMutationError => {
+  return (response as ITranscriptionMutationError).errorMessage !== undefined;
 };

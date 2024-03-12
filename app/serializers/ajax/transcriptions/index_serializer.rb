@@ -26,7 +26,7 @@ class Ajax::Transcriptions::IndexSerializer < ActiveModel::Serializer
 
     total_seconds = object.duration
     hours = total_seconds / 3600
-    minutes = (total_seconds % 60) / 60
+    minutes = (total_seconds / 60)
     seconds = total_seconds % 60
     "#{hours}h #{minutes}m #{seconds}s"
   end

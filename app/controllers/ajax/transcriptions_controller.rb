@@ -31,6 +31,19 @@ class Ajax::TranscriptionsController < ApplicationController
     end
   end
 
+  def destroy
+    result = Transcriptions::Delete.perform(
+      id: params[:id],
+      page: params[:page]
+    )
+
+    if result.success?
+      render json: result.data
+    else
+      render json: { data: result.errors.full_messages.join(', ') }
+    end
+  end
+
   private
 
   def transcriptions_params

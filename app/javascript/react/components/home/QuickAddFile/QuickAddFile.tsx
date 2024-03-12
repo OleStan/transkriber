@@ -12,9 +12,10 @@ import { useAppNavigate } from '../../../helpers/navigationHelpers';
 import { useCreateTranscriptionMutation } from '../../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 import Stack from '@mui/joy/Stack';
 import Box from '@mui/joy/Box';
-
+import { DialogTitle, ModalClose } from '@mui/joy';
 
 const QuickAddFile = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [createTranscription] = useCreateTranscriptionMutation();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -24,25 +25,18 @@ const QuickAddFile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showNotification } = useNotification();
   const { goToTranscriptions } = useAppNavigate();
-
-  const handleFileUpload = (file: File) => {
-    // Check file type before upload
-    if (!file.type.startsWith('audio/')) {
-      showNotification('Please select an audio file.', 'danger');
-      return;
-    }
-    setSelectedFile(file);
-    setOpenDialog(true);
-  };
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const file = event?.target?.files?.[0];
     if (file) {
       handleFileUpload(file);
+      // Clear the input field to allow re-uploading the same file if needed
+      event.target.value = '';
     }
   };
+
   const handleSubmit = () => {
     if (selectedFile && language) {
+      setIsSubmitting(true); // Indicate submission start
       const formData = new FormData();
       formData.append('audio_transcription[audio]', selectedFile);
       formData.append('audio_transcription[language]', language);
@@ -53,20 +47,40 @@ const QuickAddFile = () => {
           localStorage.setItem('selectedLanguage', language);
           showNotification('File uploaded successfully!', 'success');
           goToTranscriptions(response.transcriptionId);
+          resetModalState(); // Reset modal state for a new upload
         })
         .catch((err) => {
           showNotification(err.error, 'danger');
+          setIsSubmitting(false); // Reset submitting state on error
         });
     } else {
       showNotification('Please select a language.', 'danger');
     }
+  };
+
+  const resetModalState = () => {
     setOpenDialog(false);
     setSelectedFile(null);
-    setLanguage('');
+    setLanguage(localStorage.getItem('selectedLanguage') || 'auto');
+    setIsSubmitting(false); // Reset the submitting state
   };
 
   const handleBrowse = () => {
-    fileInputRef.current && fileInputRef.current.click();
+    fileInputRef.current?.click();
+  };
+
+  const handleCloseDialog = () => {
+    resetModalState(); // Reset modal state when closed
+  };
+
+  const handleFileUpload = (file: File) => {
+    // Check file type before upload
+    if (!file.type.startsWith('audio/')) {
+      showNotification('Please select an audio file.', 'danger');
+      return;
+    }
+    setSelectedFile(file);
+    setOpenDialog(true);
   };
 
   const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -79,12 +93,6 @@ const QuickAddFile = () => {
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setSelectedFile(null);
-    setLanguage('');
   };
 
   useEffect(() => {
@@ -134,18 +142,35 @@ const QuickAddFile = () => {
         </Button>
       </Sheet>
 
-      <Modal open={openDialog} onClose={() => setOpenDialog(false)}>
+      <Modal open={openDialog} onClose={handleCloseDialog} aria-labelledby='transcribe-modal-title'>
         <ModalDialog>
+          <ModalClose onClick={() => setOpenDialog(false)} />
+          <DialogTitle id='transcribe-modal-title'>Transcribe Audio</DialogTitle>
           <DialogContent>
             <Stack spacing={2}>
-              {selectedFile && <Typography>Selected file: {selectedFile.name}</Typography>}
-              <LanguageSelector
-                language={language}
-                setLanguage={setLanguage}
-              />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-                <Button onClick={handleSubmit}>Transcribe</Button>
+              {selectedFile && (
+                <Typography>
+                  Selected file: <strong>{selectedFile.name}</strong> (
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                </Typography>
+              )}
+              <LanguageSelector language={language} setLanguage={setLanguage} />
+              <Typography variant='body2' color='text.secondary'>
+                Select the language for transcription. Choose "Auto" to let the system detect the
+                language automatically.
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                <Button variant='outlined' onClick={handleCloseDialog}>
+                  Cancel
+                </Button>
+                <Button
+                  variant='solid'
+                  color='primary'
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Transcribing...' : 'Transcribe'}
+                </Button>
               </Box>
             </Stack>
           </DialogContent>

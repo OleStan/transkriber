@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 class Transcription < ApplicationRecord
-  has_one_attached :audio
+  has_one_attached :audio, dependent: :destroy
 
   enum status: { pending: 'pending', in_progress: 'in_progress', completed: 'completed', failed: 'failed' }
   # validates :audio, attached: true, content_type: ['audio/mp3', 'audio/mp4', 'audio/mpeg', 'audio/mpga', 'audio/m4a', 'audio/wav', 'audio/webm']
-  default_scope { order(created_at: :desc) }
+  # default_scope { order(created_at: :desc) }
 
   paginates_per 10
 

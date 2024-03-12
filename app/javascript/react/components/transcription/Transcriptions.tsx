@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import { useGetTranscriptionsQuery } from '../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 // import { ITranscriptionDetails } from '../../../redux/resourcesApi/transcriptions/types';
 import { useSearchParams } from 'react-router-dom';
@@ -15,7 +15,7 @@ const Transcriptions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   const [currentPage, setCurrentPage] = React.useState(initialPage);
-  const messages = useActionCable('TranscriptionChannel', 'Room1');
+  // const messages = useActionCable('TranscriptionChannel', 'Room1');
 
   const { data: transcriptions, error, isLoading } = useGetTranscriptionsQuery(currentPage);
 
@@ -23,6 +23,11 @@ const Transcriptions = () => {
     setCurrentPage(value);
     setSearchParams({ page: value.toString() }); // Update URL search params
   };
+
+  useEffect(() => {
+    if (isLoading) return;
+    console.log(transcriptions);
+  }, [transcriptions]);
 
   // Loading state
   if (isLoading) {

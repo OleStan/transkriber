@@ -102,3 +102,4 @@ end
 gem 'tailwindcss-rails', '~> 2.0'
 
 gem 'sidekiq', '~> 7.2'
+gem 'streamio-ffmpeg'

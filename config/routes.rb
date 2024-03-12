@@ -20,15 +20,12 @@ Rails.application.routes.draw do
     get  'transcriptions/', to: 'pages#root'
   end
 
-
-
-
   resources :transcriptions do
     post :transcribe, on: :member
   end
 
   namespace :ajax do
-    resources :transcriptions, only: %i[index show create]
+    resources :transcriptions, only: %i[index show create destroy]
   end
 
 end

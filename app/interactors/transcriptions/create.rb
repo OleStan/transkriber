@@ -58,7 +58,7 @@ class Transcriptions::Create < ActiveInteractor::Base
   end
 
   def audio_duration
-    AudioProcessing::DurationCalculator.calculate(context.audio)
+    AudioProcessing::DurationCalculator.calculate(context.audio.tempfile.path)
   end
 
   def transcribe_audio
