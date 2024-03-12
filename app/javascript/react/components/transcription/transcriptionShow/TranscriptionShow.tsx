@@ -42,11 +42,10 @@ const TranscriptionShow = () => {
     (['in_progress', 'pending'].includes(transcription.status) && !transcriptionState.isCompleted) &&
     !transcription.transcriptions;
 
-  console.log(transcription);
   return (
     <>
       <Typography level='h1'>{transcription.audioFilename}</Typography>
-      <AudioPlayer src={transcription.audioTranscriptionPath} />
+      <AudioPlayer src={transcription.audioTranscriptionPath} duration={transcription.duration} />
       {showInProgress ? (
         <Stack spacing={2}>
           <Typography level={'body-md'}>

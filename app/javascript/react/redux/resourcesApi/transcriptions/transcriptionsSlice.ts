@@ -51,7 +51,6 @@ export const transcriptionsSlice = createApi({
         },
       }),
       transformResponse: (response: DeleteTranscriptionResponse) => {
-        console.log('transformResponse', response);
         if (response.error || response.errorMessage) {
           return { errorMessage: response.errorMessage || 'An unknown error occurred' };
         }

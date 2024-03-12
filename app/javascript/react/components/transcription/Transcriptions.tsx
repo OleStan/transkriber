@@ -26,7 +26,6 @@ const Transcriptions = () => {
 
   useEffect(() => {
     if (isLoading) return;
-    console.log(transcriptions);
   }, [transcriptions]);
 
   // Loading state

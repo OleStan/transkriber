@@ -8,10 +8,11 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import { Box } from '@mui/joy';
 import Typography from '@mui/joy/Typography';
+import useAudioStore from '../../stores/useAudioStore';
 
 interface AudioPlayerProps {
   src: string;
-
+  duration: number;
 }
 
 const formatTime = (seconds: number): string => {
@@ -21,11 +22,12 @@ const formatTime = (seconds: number): string => {
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };
 
-function AudioPlayer({ src }: AudioPlayerProps) {
+function AudioPlayer({ src, duration }: AudioPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1.0);
-  const [duration, setDuration] = useState(0);
-  const [seek, setSeek] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(duration);
+  // const [seek, setSeek] = useState(0);
+  const { seek, setSeek } = useAudioStore(state => ({ seek: state.seek, setSeek: state.setSeek }));
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const howlerRef = useRef<ReactHowler>(null);
 
@@ -46,15 +48,15 @@ function AudioPlayer({ src }: AudioPlayerProps) {
   const handleLoadAudio = (): void => {
     if (howlerRef.current) {
       const soundDuration = howlerRef.current.duration();
-      setDuration(soundDuration);
+      setAudioDuration(soundDuration);
     }
   };
 
   const handleSeekChange = (event: Event, newValue: number | number[]): void => {
-    console.log(newValue,Array.isArray(newValue), event);
     const newSeek = Array.isArray(newValue) ? newValue[0] : newValue;
+    setSeek(newSeek); // Update seek state to reflect the slider change
     if (howlerRef.current) {
-      howlerRef.current.seek(newSeek); // Directly seek without updating state
+      howlerRef.current.seek(newSeek); // Seek the audio to the new position
     }
   };
 
@@ -77,6 +79,10 @@ function AudioPlayer({ src }: AudioPlayerProps) {
     setTimeout(handleLoadAudio, 100); // Adjust based on actual load behavior
   }, [src]);
 
+  const handleAudioEnd = () => {
+    setSeek(audioDuration);
+  };
+
   return (
     <>
       <ReactHowler
@@ -86,7 +92,7 @@ function AudioPlayer({ src }: AudioPlayerProps) {
         ref={howlerRef}
         rate={playbackRate}
         onLoad={() => handleLoadAudio()}
-        onEnd={() => setPlaying(false)}
+        onEnd={handleAudioEnd}
       />
       <Box
         sx={{
@@ -165,13 +171,13 @@ function AudioPlayer({ src }: AudioPlayerProps) {
             aria-label='Seek'
             value={seek}
             min={0}
-            max={duration}
+            max={audioDuration}
             step={1}
             size={'sm'}
             color={'neutral'}
             onChange={handleSeekChange}
           />
-          <Typography level='body-sm'>{formatTime(duration)}</Typography>
+          <Typography level='body-sm'>{formatTime(audioDuration)}</Typography>
         </Box>
       </Box>
     </>
