@@ -26,9 +26,8 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1.0);
   const [audioDuration, setAudioDuration] = useState(duration);
-  // const [seek, setSeek] = useState(0);
   const { seek, setSeek } = useAudioStore(state => ({ seek: state.seek, setSeek: state.setSeek }));
-  const [playbackRate, setPlaybackRate] = useState(1.0);
+  const [playbackRate, setPlaybackRate] = useState(1.2);
   const howlerRef = useRef<ReactHowler>(null);
 
   const togglePlay = (): void => setPlaying(!playing);
@@ -42,6 +41,11 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
     setPlaybackRate(newRate);
     if (howlerRef.current) {
       howlerRef.current.howler.rate(newRate);
+      const audioSourceNode = howlerRef.current.audio.source;
+      if (audioSourceNode) {
+        audioSourceNode.playbackRate.value = rate;
+        audioSourceNode.preservesPitch = true;
+      }
     }
   };
 
@@ -54,7 +58,7 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
 
   const handleSeekChange = (event: Event, newValue: number | number[]): void => {
     const newSeek = Array.isArray(newValue) ? newValue[0] : newValue;
-    setSeek(newSeek); // Update seek state to reflect the slider change
+    setSeek(newSeek);
     if (howlerRef.current) {
       howlerRef.current.seek(newSeek); // Seek the audio to the new position
     }
@@ -78,6 +82,12 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
   useEffect(() => {
     setTimeout(handleLoadAudio, 100); // Adjust based on actual load behavior
   }, [src]);
+
+  useEffect(() => {
+    if (howlerRef.current) {
+      howlerRef.current.seek(seek); // Seek the audio to the new position
+    }
+  }, [seek]);
 
   const handleAudioEnd = () => {
     setSeek(audioDuration);

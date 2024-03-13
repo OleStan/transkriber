@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useLoaderData } from 'react-router-dom';
 import { useGetTranscriptionQuery } from '../../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 import AudioPlayer from '../../player/AudioPlayer';
+import useAdjustableTranscription from '../../../hooks/useAdjustableTranscription';
 import TranscriptionShowTranscription from './TranscriptionShowTranscription';
 import TranscriptionSegmentsSkeleton from './TranscriptionSegmentsSkeleton';
 import TranscriptionShowSkeleton from './TranscriptionShowSkeleton';
 import useActionCable from '../../../hooks/useActionCable';
-import { LinearProgress, Typography, Stack } from '@mui/joy';
+import AdjustSegmentSizeSlider from './AdjustSegmentSizeSlider';
+import { Box, LinearProgress, Typography, Stack } from '@mui/joy';
 
 interface LoaderData {
   id: string;
@@ -34,6 +36,10 @@ const TranscriptionShow = () => {
     }));
   }, [messages]);
 
+    const transcriptionSegments = useAdjustableTranscription(
+    transcription?.transcriptions || transcriptionState.text || []
+  );
+
   if (isLoading || !transcription) {
     return <TranscriptionShowSkeleton />;
   }
@@ -44,7 +50,18 @@ const TranscriptionShow = () => {
 
   return (
     <>
-      <Typography level='h1'>{transcription.audioFilename}</Typography>
+      <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: 2,
+        marginBottom: 4,
+      }}
+      >
+        <Typography level='h1'>{transcription.audioFilename}</Typography>
+        <AdjustSegmentSizeSlider />
+      </Box>
       <AudioPlayer src={transcription.audioTranscriptionPath} duration={transcription.duration} />
       {showInProgress ? (
         <Stack spacing={2}>
@@ -56,7 +73,7 @@ const TranscriptionShow = () => {
         </Stack>
       ) : (
         <TranscriptionShowTranscription
-          transcriptionSegments={transcription.transcriptions || transcriptionState.text}
+          transcriptionSegments={transcriptionSegments}
         />
       )}
     </>

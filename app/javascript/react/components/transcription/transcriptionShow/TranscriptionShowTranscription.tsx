@@ -6,6 +6,7 @@ import Grid from '@mui/joy/Grid';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { useState } from 'react';
 import useAudioStore from '../../../stores/useAudioStore';
+import { ITranscriptionSegment } from '../../../redux/resourcesApi/transcriptions/types';
 
 const TranscriptionShowTranscription = ({ transcriptionSegments }: ITranscriptionDetails) => {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
@@ -24,7 +25,7 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: ITranscriptio
 
   return (
     <List>
-      {transcriptionSegments?.map((transcription) => (
+      {transcriptionSegments?.map((transcription: ITranscriptionSegment) => (
         <ListItem
           key={transcription.id}
           sx={{
@@ -45,10 +46,11 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: ITranscriptio
                 display: 'flex',
                 flexDirection: 'row',
                 paddingTop: '1.25rem',
+                userSelect: 'none',
             }}
-              onClick={() => handleClick(transcription.id, transcription.start)}
+              onClick={() => handleClick(transcription.startOfChunk)}
             >
-              <Typography level={'body-xs'}>{transcription.timestamp}</Typography>
+              <Typography level={'body-xs'}>{transcription.timestampOfChunk}</Typography>
               <PlayArrowRoundedIcon
                 fontSize={'2rem'}
                 sx={{
@@ -57,7 +59,11 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: ITranscriptio
               />
             </Grid>
             <Grid xs={10} sm={11}>
-              <Typography level={'body-md'}>{transcription.text}</Typography>
+              <Typography level={'body-md'}>
+              {transcription.segments.map((segment) => (
+                <Typography key={segment.id} >{segment.text}</Typography>
+              ))}
+              </Typography>
             </Grid>
           </Grid>
         </ListItem>
