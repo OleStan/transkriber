@@ -27,7 +27,7 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
   const [volume, setVolume] = useState(1.0);
   const [audioDuration, setAudioDuration] = useState(duration);
   const { seek, setSeek } = useAudioStore(state => ({ seek: state.seek, setSeek: state.setSeek }));
-  const [playbackRate, setPlaybackRate] = useState(1.2);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const howlerRef = useRef<ReactHowler>(null);
 
   const togglePlay = (): void => setPlaying(!playing);

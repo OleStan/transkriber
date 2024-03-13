@@ -137,15 +137,13 @@ class OpenAiWhisperService < ApplicationService
   def read_verbose_json_response(response)
     return response.first if response.length <= 1
 
-    first_response = response.first
-    offset_time = first_response.is_a?(Array) ? response.first.last['duration'] : response.first['duration']
-
+    offset_time = 0
     response[1..].each do |transcription|
       transcription['segments'].each do |segment|
         segment['start'] = (segment['start'] + offset_time).round(2)
         segment['end'] = (segment['end'] + offset_time).round(2)
-        offset_time = segment['end']
       end
+      offset_time = transcription['segments'][-1]['end']
     end
 
     response
