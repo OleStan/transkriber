@@ -1,0 +1,15 @@
+<div class="flex flex-col ">
+  <% @transcriptions.each do |transcription| %>
+    <%= link_to audio_transcription_path(transcription),
+                class: 'grid grid-row border-2 px-3 py-4 grid-cols-3 hover:bg-green-100' do %>
+      <div class="col-6 font-semibold text-black"><%= transcription.audio.filename %></div>
+      <div class="col-3 text-gray-500"><%= transcription.created_at.strftime("%d.%m.%Y %H:%M") %></div>
+    <% end %>
+  <% end %>
+</div>
+<style>
+
+</style>
+<div class="mt-4">
+  <%= paginate @transcriptions, class: 'flex justify-center' %>
+</div>
