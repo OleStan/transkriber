@@ -69,7 +69,7 @@ const SideBar = () => {
           md: 'none',
         },
         transition: 'transform 0.4s, width 0.4s',
-        zIndex: 3,
+        zIndex: 20,
         height: '100dvh',
         width: 'var(--Sidebar-width)',
         top: 0,
