@@ -11,7 +11,7 @@ import Chip from '@mui/joy/Chip';
 import { useNotification } from '../../../contexts/NotificationContext';
 
 interface TranscriptionsTableProps {
-  transcriptions: ITranscription[];
+  transcriptions: ITranscription[] | undefined;
 }
 
 const TranscriptionsTable: React.FC<TranscriptionsTableProps> = ({ transcriptions }) => {

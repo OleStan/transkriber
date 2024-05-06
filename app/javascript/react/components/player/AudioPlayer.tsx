@@ -119,7 +119,7 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
           px: '20px',
           pt: '15px',
           pb: '7px',
-          zIndex: 1100,
+          zIndex: 10,
         }}
       >
         <Box
