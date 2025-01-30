@@ -1,4 +1,3 @@
-import { ITranscriptionDetails } from '../../../redux/resourcesApi/transcriptions/types';
 import Typography from '@mui/joy/Typography';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
@@ -6,9 +5,9 @@ import Grid from '@mui/joy/Grid';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { useState } from 'react';
 import useAudioStore from '../../../stores/useAudioStore';
-import { ITranscriptionSegment } from '../../../redux/resourcesApi/transcriptions/types';
+import { TranscriptionDetails, TranscriptionSegment } from '../../../redux/resourcesApi/transcriptions/types';
 
-const TranscriptionShowTranscription = ({ transcriptionSegments }: ITranscriptionDetails) => {
+const TranscriptionShowTranscription = ({ transcriptionSegments }: TranscriptionDetails) => {
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const setSeek = useAudioStore((state) => state.setSeek);
   const handleMouseEnter = (id: number) => {
@@ -25,7 +24,7 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: ITranscriptio
 
   return (
     <List>
-      {transcriptionSegments?.map((transcription: ITranscriptionSegment) => (
+      {transcriptionSegments?.map((transcription: TranscriptionSegment) => (
         <ListItem
           key={transcription.id}
           sx={{
@@ -47,12 +46,12 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: ITranscriptio
                 flexDirection: 'row',
                 paddingTop: '1.25rem',
                 userSelect: 'none',
-            }}
+              }}
               onClick={() => handleClick(transcription.startOfChunk)}
             >
               <Typography level={'body-xs'}>{transcription.timestampOfChunk}</Typography>
               <PlayArrowRoundedIcon
-                fontSize={'2rem'}
+                fontSize={'small'} // change to xs
                 sx={{
                   visibility: hoveredId === transcription.id ? 'visible' : 'hidden',
                 }}
@@ -60,9 +59,9 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: ITranscriptio
             </Grid>
             <Grid xs={10} sm={11}>
               <Typography level={'body-md'}>
-              {transcription.segments.map((segment) => (
-                <Typography key={segment.id} >{segment.text}</Typography>
-              ))}
+                {transcription.segments.map((segment) => (
+                  <Typography key={segment.id}>{segment.text}</Typography>
+                ))}
               </Typography>
             </Grid>
           </Grid>

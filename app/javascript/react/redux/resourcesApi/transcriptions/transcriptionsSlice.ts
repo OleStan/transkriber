@@ -1,62 +1,39 @@
-import ReactOnRails from 'react-on-rails';
-
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { toCamelCase } from '../../utils';
-import { getCsrfTokenHeader } from '../../shared/headers';
+import { transcriberApi } from '../transcriberService';
 import {
-  ITranscriptionDetailsResponse,
-  ITranscriptionsResponse,
-  // MutationResponse,
-  CreateTranscriptionResponse, DeleteTranscriptionResponse,
+  TranscriptionDetailsResponse,
+  TranscriptionsResponse,
+  TranscriptionCreateSuccess,
 } from './types';
-const token = ReactOnRails.authenticityToken();
 
-export const transcriptionsSlice = createApi({
-  reducerPath: 'transcriptionsApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:3000/ajax/',
-  }),
+export const transcriptionsSlice = transcriberApi.injectEndpoints({
   endpoints: (builder) => ({
-    getTranscription: builder.query<ITranscriptionDetailsResponse, number>({
+    getTranscription: builder.query<TranscriptionDetailsResponse, number>({
       query: (id: number) => `transcriptions/${id}`,
-      transformResponse: (response: ITranscriptionDetailsResponse) => toCamelCase(response),
+      transformResponse: (response: TranscriptionDetailsResponse) => toCamelCase(response),
     }),
-    getTranscriptions: builder.query<ITranscriptionsResponse, number | null>({
-      query: (page: number) => `transcriptions?page=${page}`,
-      transformResponse: (response: ITranscriptionsResponse) => toCamelCase(response),
+    getTranscriptions: builder.query<TranscriptionsResponse, number | null>({
+      query: (page: number | null) => `transcriptions${page ? `?page=${page}` : ''}`,
+      transformResponse: (response: TranscriptionsResponse) => toCamelCase(response),
     }),
-    createTranscription: builder.mutation<void, FormData>({
-      query: (formData) => ({
-        url: 'transcriptions',
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-CSRF-Token': token,
-        },
-      }),
-      transformResponse: (response: CreateTranscriptionResponse) => {
-        if (response.error || response.errorMessage) {
-          return { errorMessage: response.errorMessage || 'An unknown error occurred' };
-        }
-        const camelCaseResponse = toCamelCase(response);
-        return { transcriptionId: camelCaseResponse.transcriptionId };
+    createTranscription: builder.mutation<TranscriptionCreateSuccess, FormData>({
+      query: (formData) => {
+        return {
+          url: 'transcriptions',
+          method: 'POST',
+          body: formData,
+        };
       },
+      transformResponse: (response: TranscriptionCreateSuccess) => toCamelCase(response),
     }),
-    deleteTranscription: builder.mutation<void, number>({
-      query: (id) => ({
-        url: `transcriptions/${id}`,
-        method: 'DELETE',
-        headers: {
-          'X-CSRF-Token': token,
-        },
-      }),
-      transformResponse: (response: DeleteTranscriptionResponse) => {
-        if (response.error || response.errorMessage) {
-          return { errorMessage: response.errorMessage || 'An unknown error occurred' };
-        }
-        const camelCaseResponse = toCamelCase(response);
-        return { transcriptions: camelCaseResponse.transcriptions };
+    deleteTranscription: builder.mutation<TranscriptionsResponse, number>({
+      query: (id) => {
+        return {
+          url: `transcriptions/${id}`,
+          method: 'DELETE',
+        };
       },
+      transformResponse: (response: TranscriptionsResponse) => toCamelCase(response),
     }),
   }),
 });

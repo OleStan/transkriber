@@ -2,7 +2,6 @@ import QuickAddFile from './QuickAddFile/QuickAddFile';
 import Box from '@mui/joy/Box';
 import Typography from '@mui/joy/Typography';
 import Stack from '@mui/joy/Stack';
-import Grid from '@mui/joy/Grid';
 
 const Home = () => {
   return (

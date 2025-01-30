@@ -36,7 +36,7 @@ const TranscriptionShow = () => {
     }));
   }, [messages]);
 
-    const transcriptionSegments = useAdjustableTranscription(
+  const transcriptionSegments = useAdjustableTranscription(
     transcription?.transcriptions || transcriptionState.text || []
   );
 
@@ -45,19 +45,20 @@ const TranscriptionShow = () => {
   }
 
   const showInProgress =
-    (['in_progress', 'pending'].includes(transcription.status) && !transcriptionState.isCompleted) &&
+    ['in_progress', 'pending'].includes(transcription.status) &&
+    !transcriptionState.isCompleted &&
     !transcription.transcriptions;
 
   return (
     <>
       <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        gap: 2,
-        marginBottom: 4,
-      }}
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+          marginBottom: 4,
+        }}
       >
         <Typography level='h1'>{transcription.audioFilename}</Typography>
         <AdjustSegmentSizeSlider />
@@ -72,9 +73,7 @@ const TranscriptionShow = () => {
           <TranscriptionSegmentsSkeleton />
         </Stack>
       ) : (
-        <TranscriptionShowTranscription
-          transcriptionSegments={transcriptionSegments}
-        />
+        <TranscriptionShowTranscription transcriptionSegments={transcriptionSegments} />
       )}
     </>
   );

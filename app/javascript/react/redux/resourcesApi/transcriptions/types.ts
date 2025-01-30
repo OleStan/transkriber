@@ -1,4 +1,9 @@
-export interface ITranscription {
+export interface ErrorResponse {
+  error: boolean;
+  errorMessage: string;
+}
+
+export interface Transcription {
   id: number;
   audioFilename: string | null;
   createdAtFormatted: string;
@@ -6,47 +11,36 @@ export interface ITranscription {
   duration: string;
 }
 
-export interface ITranscriptionsResponse {
-  page: number;
-  total_pages: number;
-  total_count: number;
-  transcriptions: ITranscription[];
-}
-
-export interface ITranscriptionSegment {
+export interface Segment {
   id: number;
-  timestamp: string;
   text: string;
   start: number;
   end: number;
 }
 
-export interface ITranscriptionDetails extends ITranscription {
-  transcriptionSegments: ITranscriptionSegment[];
+export interface TranscriptionSegment extends Segment {
+  timestamp: string;
+  timestampOfChunk: string;
+  startOfChunk: number;
+  segments: Segment[];
+}
+
+export interface TranscriptionDetails extends Transcription {
+  transcriptionSegments: TranscriptionSegment[];
   audioTranscriptionPath: string;
 }
 
-export interface ITranscriptionDetailsResponse {
-  transcriptions: ITranscriptionDetails[];
+export interface TranscriptionsResponse {
+  page: number;
+  totalPages: number;
+  totalCount: number;
+  transcriptions: Transcription[];
 }
 
-export interface ITranscriptionCreateSuccess {
+export interface TranscriptionDetailsResponse {
+  transcriptions: TranscriptionDetails[];
+}
+
+export interface TranscriptionCreateSuccess {
   transcriptionId: number;
 }
-
-export interface ITranscriptionMutationError {
-  error: boolean;
-  errorMessage: string;
-}
-
-export type CreateTranscriptionResponse = ITranscriptionCreateSuccess | ITranscriptionMutationError;
-
-export type DeleteTranscriptionResponse = ITranscriptionsResponse | ITranscriptionMutationError;
-
-export type IsError = (
-  response: CreateTranscriptionResponse
-) => response is ITranscriptionMutationError;
-
-export const isError: IsError = (response): response is ITranscriptionMutationError => {
-  return (response as ITranscriptionMutationError).errorMessage !== undefined;
-};

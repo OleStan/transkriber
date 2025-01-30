@@ -4,7 +4,6 @@ import { useSearchParams } from 'react-router-dom';
 import Typography from '@mui/joy/Typography';
 import CircularProgress from '@mui/joy/CircularProgress';
 import Stack from '@mui/joy/Stack';
-import useActionCable from '../../hooks/useActionCable';
 import { Pagination } from '@mui/material';
 import TranscriptionsTable from './transcriptionsTable/TranscriptionsTable';
 import QuickAddFile from '../home/QuickAddFile/QuickAddFile';
@@ -14,21 +13,12 @@ const Transcriptions = () => {
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   const [currentPage, setCurrentPage] = React.useState(initialPage);
 
-  const {
-    data: transcriptions,
-    error,
-    isLoading,
-    refetch,
-  } = useGetTranscriptionsQuery(currentPage);
+  const { data: transcriptions, error, isLoading } = useGetTranscriptionsQuery(currentPage);
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
     setSearchParams({ page: value.toString() }); // Update URL search params
   };
-
-  // useEffect(() => {
-  //   refetch();
-  // }, []);
 
   useEffect(() => {
     if (isLoading) return;
@@ -52,14 +42,16 @@ const Transcriptions = () => {
 
   return (
     <Stack spacing={2}>
-      <Typography level='h4' component='h1' sx={{ mb: 2 }}>Transcriptions</Typography>
+      <Typography level='h4' component='h1' sx={{ mb: 2 }}>
+        Transcriptions
+      </Typography>
 
       {transcriptions?.transcriptions && transcriptions.transcriptions.length === 0 ? (
         <QuickAddFile />
       ) : (
         <>
           <TranscriptionsTable key={currentPage} transcriptions={transcriptions?.transcriptions} />
-          {transcriptions?.totalPages > 1 && (
+          {transcriptions && transcriptions?.totalPages > 1 && (
             <Stack direction='row' spacing={2} justifyContent='center' mt={2}>
               <Pagination
                 count={transcriptions?.totalPages}

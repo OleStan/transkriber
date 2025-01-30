@@ -14,6 +14,7 @@ import Stack from '@mui/joy/Stack';
 import Box from '@mui/joy/Box';
 import { DialogTitle, ModalClose } from '@mui/joy';
 
+
 const QuickAddFile = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createTranscription] = useCreateTranscriptionMutation();
@@ -73,23 +74,29 @@ const QuickAddFile = () => {
     resetModalState(); // Reset modal state when closed
   };
 
-  const handleFileUpload = (file: File) => {
-    // Check file type before upload
-    if (!file.type.startsWith('audio/')) {
-      showNotification('Please select an audio file.', 'danger');
-      return;
-    }
-    setSelectedFile(file);
-    setOpenDialog(true);
-  };
+  const handleFileUpload = useCallback(
+    (file: File) => {
+      // Check file type before upload
+      if (!file.type.startsWith('audio/')) {
+        showNotification('Please select an audio file.', 'danger');
+        return;
+      }
+      setSelectedFile(file);
+      setOpenDialog(true);
+    },
+    [showNotification]
+  );
 
-  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      handleFileUpload(file);
-    }
-  }, []);
+  const handleDrop = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      const file = event.dataTransfer.files[0];
+      if (file) {
+        handleFileUpload(file);
+      }
+    },
+    [handleFileUpload]
+  );
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -155,7 +162,7 @@ const QuickAddFile = () => {
                 </Typography>
               )}
               <LanguageSelector language={language} setLanguage={setLanguage} />
-              <Typography variant='body2' color='text.secondary'>
+              <Typography>
                 Select the language for transcription. Choose "Auto" to let the system detect the
                 language automatically.
               </Typography>
