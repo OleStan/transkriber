@@ -6,7 +6,7 @@ import CircularProgress from '@mui/joy/CircularProgress';
 import Stack from '@mui/joy/Stack';
 import { Pagination } from '@mui/material';
 import TranscriptionsTable from './transcriptionsTable/TranscriptionsTable';
-import QuickAddFile from '../home/QuickAddFile/QuickAddFile';
+import QuickAddFileOrUrl from '../home/QuickAddFile/QuickAddFileOrUrl';
 
 const Transcriptions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -47,7 +47,7 @@ const Transcriptions = () => {
       </Typography>
 
       {transcriptions?.transcriptions && transcriptions.transcriptions.length === 0 ? (
-        <QuickAddFile />
+        <QuickAddFileOrUrl />
       ) : (
         <>
           <TranscriptionsTable key={currentPage} transcriptions={transcriptions?.transcriptions} />

@@ -1,4 +1,4 @@
-import QuickAddFile from './QuickAddFile/QuickAddFile';
+import QuickAddFileOrUrl from './QuickAddFile/QuickAddFileOrUrl';
 import Box from '@mui/joy/Box';
 import Typography from '@mui/joy/Typography';
 import Stack from '@mui/joy/Stack';
@@ -13,7 +13,7 @@ const Home = () => {
       {/*  <Grid xs={6} md={6}>*/}
       {/*  </Grid>*/}
       {/*</Grid>*/}
-      <QuickAddFile />
+      <QuickAddFileOrUrl />
 
       <Box>
         <Typography>*Table with last transcriptions*</Typography>

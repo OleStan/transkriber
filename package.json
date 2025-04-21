@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bin/vite dev"
+    "dev": "bin/vite dev",
+    "start": "bin/rails s"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
