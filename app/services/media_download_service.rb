@@ -28,9 +28,24 @@ class MediaDownloadService
 
   # Find either yt-dlp or youtube-dl in PATH
   def detect_downloader
-    %w[yt-dlp youtube-dl].find { |cmd| command_exist?(cmd) } ||
-      raise("Neither yt-dlp nor youtube-dl found. Please install via Homebrew (macOS) or pip3 (Ubuntu).")
+    # first try globally installed binaries
+    if command_exist?('yt-dlp')      then ['yt-dlp']
+    elsif command_exist?('youtube-dl') then ['youtube-dl']
+    # then check pip --user install location
+    elsif File.exist?(File.expand_path('~/.local/bin/yt-dlp'))
+      [File.expand_path('~/.local/bin/yt-dlp')]
+    # then python module
+    elsif python_module_exist?
+      ['python3', '-m', 'yt_dlp']
+    else
+      raise <<~ERR
+        Required downloader not found.
+        • On macOS: brew install yt-dlp
+        • On Ubuntu: pip3 install --user yt-dlp
+      ERR
+    end
   end
+
 
   def command_exist?(cmd)
     system("which #{cmd} > /dev/null 2>&1")
