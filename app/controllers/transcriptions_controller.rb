@@ -9,6 +9,13 @@ class TranscriptionsController < ApplicationController
 
   def create
     @transcription = Transcription.new(transcriptions_params)
+
+    if video_file?(transcriptions_params[:audio])
+      video_blob = transcriptions_params[:audio]
+      audio_blob = VideoToAudioService.call(video_blob)
+      @transcription.audio.attach(audio_blob)
+    end
+
     respond_to do |format|
       if @transcription.save
         format.html { redirect_to audio_transcription_path(@transcription) }
@@ -42,5 +49,9 @@ class TranscriptionsController < ApplicationController
 
   def transcriptions_params
     params.require(:audio_transcription).permit(:audio, :language)
+  end
+
+  def video_file?(file)
+    file.content_type.start_with?('video/')
   end
 end

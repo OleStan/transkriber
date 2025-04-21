@@ -4,8 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "bin/vite dev",
-    "vite": "yarn start"
+    "dev": "bin/vite dev"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
@@ -50,7 +49,7 @@
     "prettier": "^3.2.5",
     "typescript": "^5.3.3",
     "vite": "^5.0.0",
-    "vite-plugin-ruby": "^5.1.0"
+    "vite-plugin-ruby": "^5.1.1"
   },
   "peerDependencies": {
     "react": "^18.2.0",

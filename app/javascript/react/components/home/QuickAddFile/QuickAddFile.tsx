@@ -77,8 +77,8 @@ const QuickAddFile = () => {
   const handleFileUpload = useCallback(
     (file: File) => {
       // Check file type before upload
-      if (!file.type.startsWith('audio/')) {
-        showNotification('Please select an audio file.', 'danger');
+      if (!file.type.startsWith('audio/') && !file.type.startsWith('video/')) {
+        showNotification('Please select an audio or video file.', 'danger');
         return;
       }
       setSelectedFile(file);
