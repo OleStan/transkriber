@@ -4,37 +4,27 @@ require 'tmpdir'
 require 'open3'
 
 class MediaDownloadService
-  # Patterns to recognize YouTube URLs
   YOUTUBE_HOSTS = [
     %r{\Ahttps?://(www\.)?youtube\.com},
     %r{\Ahttps?://youtu\.be}
   ].freeze
 
   def initialize(url)
-    @url        = url
-    @downloader = detect_downloader
+    @url         = url
+    @downloader  = detect_downloader
   end
 
-  # Public API: returns a hash with :io and :filename for the downloaded media
   def download
-    if youtube_url?
-      download_from_youtube
-    else
-      download_generic
-    end
+    youtube_url? ? download_from_youtube : download_generic
   end
 
   private
 
-  # Find either yt-dlp or youtube-dl in PATH
   def detect_downloader
-    # first try globally installed binaries
-    if command_exist?('yt-dlp')      then ['yt-dlp']
-    elsif command_exist?('youtube-dl') then ['youtube-dl']
-    # then check pip --user install location
-    elsif File.exist?(File.expand_path('~/.local/bin/yt-dlp'))
-      [File.expand_path('~/.local/bin/yt-dlp')]
-    # then python module
+    if command_exist?('yt-dlp')
+      ['yt-dlp']
+    elsif command_exist?('youtube-dl')
+      ['youtube-dl']
     elsif python_module_exist?
       ['python3', '-m', 'yt_dlp']
     else
@@ -46,48 +36,51 @@ class MediaDownloadService
     end
   end
 
-
   def command_exist?(cmd)
     system("which #{cmd} > /dev/null 2>&1")
   end
 
-  def youtube_url?
-    YOUTUBE_HOSTS.any? { |regex| @url.match?(regex) }
+  def python_module_exist?
+    # we only care if `python3 -m yt_dlp --version` exits zero
+    _, _, status = Open3.capture3('python3', '-m', 'yt_dlp', '--version')
+    status.success?
   end
 
-  # Download audio from YouTube using the detected CLI
+  def youtube_url?
+    YOUTUBE_HOSTS.any? { |rg| @url.match?(rg) }
+  end
+
   def download_from_youtube
     Dir.mktmpdir('media_dl') do |dir|
-      # Template for output filenames
-      output_template = File.join(dir, '%(title)s.%(ext)s')
-      cmd = [
-        @downloader,
-        '-f', 'bestaudio',
-        '--extract-audio',
-        '--audio-format', 'mp3',
-        '-o', output_template,
-        @url
-      ]
+      template = File.join(dir, '%(title)s.%(ext)s')
+      cmd = @downloader +
+            ['-f', 'bestaudio',
+             '--extract-audio',
+             '--audio-format', 'mp3',
+             '--no-progress',
+             '--no-warnings',
+             '--no-color',
+             '-o', template,
+             @url]
 
       stdout, stderr, status = Open3.capture3(*cmd)
       unless status.success?
-        raise "Download failed (#{@downloader}): #{stderr}"
+        raise "Download failed (#{cmd.join(' ')}):\n#{stderr}"
       end
 
       files = Dir.glob(File.join(dir, '*'))
       raise 'No files were downloaded.' if files.empty?
 
-      latest_file = files.max_by { |f| File.mtime(f) }
-      { io: File.open(latest_file, 'rb'), filename: File.basename(latest_file) }
+      latest = files.max_by { |f| File.mtime(f) }
+      { io: File.open(latest, 'rb'), filename: File.basename(latest) }
     end
   end
 
-  # Download any other URL via open-uri
   def download_generic
-    file = URI.open(@url)
+    file     = URI.open(@url)
     filename = File.basename(URI.parse(@url).path.presence || 'download')
     { io: file, filename: filename }
   rescue OpenURI::HTTPError => e
-    raise "Failed to download from URL: #{e.message}"
+    raise "Failed to download URL: #{e.message}"
   end
 end
