@@ -115,6 +115,8 @@ GEM
     dry-cli (1.2.0)
     erubi (1.13.1)
     event_stream_parser (1.0.0)
+    faker (3.5.1)
+      i18n (>= 1.8.11, < 2)
     faraday (2.13.0)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -392,6 +394,7 @@ DEPENDENCIES
   bootsnap
   capybara
   debug
+  faker
   ffmpeg
   figaro
   image_processing (~> 1.2)

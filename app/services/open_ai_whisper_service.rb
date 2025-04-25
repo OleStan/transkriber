@@ -95,7 +95,7 @@ class OpenAiWhisperService < ApplicationService
   end
 
   def transcribe_audio(temp_file, response_format)
-    # return mocked_response if Rails.env.development?
+    return mocked_response if Rails.env.development?
 
     response = client.audio.transcribe(
       parameters: {
@@ -151,6 +151,7 @@ class OpenAiWhisperService < ApplicationService
 
   def mocked_response
     sleep 5
-    MockedData::MOKED_OPENAI_WHISPER_RESPONSE
+    # MockedData::MOKED_OPENAI_WHISPER_RESPONSE
+    MockedData.mocked_openai_whisper_response(3000)
   end
 end
