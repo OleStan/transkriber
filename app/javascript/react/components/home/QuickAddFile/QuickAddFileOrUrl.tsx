@@ -10,6 +10,10 @@ import Input from '@mui/joy/Input';
 import Stack from '@mui/joy/Stack';
 import Box from '@mui/joy/Box';
 import { DialogTitle, ModalClose } from '@mui/joy';
+import Tabs from '@mui/joy/Tabs';
+import TabList from '@mui/joy/TabList';
+import Tab from '@mui/joy/Tab';
+import LinearProgress from '@mui/joy/LinearProgress';
 
 import LanguageSelector from './LanguageSelector';
 import { useNotification } from '../../../contexts/NotificationContext';
@@ -106,91 +110,81 @@ const QuickAddFileOrUrl = () => {
   }, []);
 
   return (
-    <>
-      <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
-        <Button
-          variant={inputType === 'file' ? 'solid' : 'outlined'}
-          onClick={() => {
-            setInputType('file');
-            resetState();
-            setOpenDialog(false);
-          }}
-        >
-          File
-        </Button>
-        <Button
-          variant={inputType === 'url' ? 'solid' : 'outlined'}
-          onClick={() => {
-            setInputType('url');
-            resetState();
-          }}
-        >
-          URL
-        </Button>
-      </Box>
-
+    <Sheet variant="outlined" sx={{ p: 4, borderRadius: 8, mb: 2 }}>
+      <Typography level="body-md" sx={{ mb: 1 }}>
+        Choose your transcription source:
+      </Typography>
+      <Tabs value={inputType} onChange={(_, v) => setInputType(v as InputType)} sx={{ mb: 2 }}>
+        <TabList>
+          <Tab value="file">File</Tab>
+          <Tab value="url">URL</Tab>
+        </TabList>
+      </Tabs>
+      {/* Show file upload area only if inputType is file */}
       {inputType === 'file' && (
-        <Sheet
-          variant='outlined'
-          color='neutral'
-          sx={{
-            px: 16,
-            minHeight: 300,
-            borderRadius: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '2px solid',
-            borderColor: 'divider',
-            '&:hover': {
-              border: '2px dashed',
-              borderColor: 'primary.softColor',
-            },
-          }}
+        <Box
           onDrop={handleDrop}
-          onDragOver={handleDragOver}
+          onDragOver={(e) => e.preventDefault()}
+          sx={{
+            border: '2px dashed #90caf9',
+            borderRadius: 8,
+            p: 4,
+            textAlign: 'center',
+            bgcolor: '#f9f9fb',
+            mb: 2,
+            cursor: 'pointer',
+          }}
+          onClick={handleBrowse}
         >
-          <DriveFolderUploadIcon fontSize='large' />
-          <Typography level='title-md' sx={{ mt: 1, mb: 2 }}>
-            Add new transcription
+          <DriveFolderUploadIcon sx={{ fontSize: 48, color: '#1976d2', mb: 1 }} />
+          <Typography level="body-lg">
+            Drag & drop your audio/video file here, or <span style={{ color: '#1976d2', textDecoration: 'underline' }}>browse to upload</span>.
           </Typography>
+          <Typography level="body-sm" sx={{ mt: 1, color: '#888' }}>
+            Supported formats: MP3, WAV, MP4, etc.
+          </Typography>
+          {isSubmitting && <LinearProgress sx={{ mt: 2 }} />}
+          {isSubmitting && (
+            <Typography level="body-sm" sx={{ mt: 1 }}>
+              {selectedFile ? 'Uploading…' : ''}
+            </Typography>
+          )}
           <input
+            type="file"
+            accept="audio/*,video/*"
             ref={fileInputRef}
-            type='file'
-            accept='audio/*,video/*'
-            onChange={handleFileChange}
             style={{ display: 'none' }}
+            onChange={handleFileChange}
           />
-          <Button size='lg' variant='outlined' onClick={handleBrowse}>
-            Browse a file
-          </Button>
-        </Sheet>
+        </Box>
       )}
-
+      {/* Show URL input area only if inputType is url */}
       {inputType === 'url' && (
-        <Sheet
-          variant='outlined'
-          color='neutral'
-          sx={{ p: 4, borderRadius: 2, mb: 2 }}
-          onClick={() => {}}
-        >
-          <Typography level='title-sm' sx={{ mb: 1 }}>
-            Enter media URL
-          </Typography>
+        <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
           <Input
-            placeholder='https://...'
+            placeholder="Paste audio/video URL here"
+            fullWidth
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
-            endDecorator={
-              <Button size='sm' onClick={() => setOpenDialog(true)}>
-                Next
-              </Button>
-            }
+            sx={{ mb: 2, flex: 1 }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                setOpenDialog(true);
+              }
+            }}
           />
-        </Sheet>
+          <Button
+            variant="solid"
+            color="primary"
+            sx={{ height: '40px', alignSelf: 'center', mb: 2 }}
+            disabled={!urlInput.trim()}
+            onClick={() => setOpenDialog(true)}
+          >
+            Submit
+          </Button>
+        </Box>
       )}
-
+      <LanguageSelector language={language} setLanguage={setLanguage} />
       <Modal
         open={openDialog}
         onClose={() => {
@@ -219,7 +213,6 @@ const QuickAddFileOrUrl = () => {
                   URL: <strong>{urlInput}</strong>
                 </Typography>
               )}
-              <LanguageSelector language={language} setLanguage={setLanguage} />
               <Typography>
                 Select the language for transcription. Choose "Auto" for automatic detection.
               </Typography>
@@ -246,7 +239,7 @@ const QuickAddFileOrUrl = () => {
           </DialogContent>
         </ModalDialog>
       </Modal>
-    </>
+    </Sheet>
   );
 };
 
