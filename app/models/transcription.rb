@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class Transcription < ApplicationRecord
+  belongs_to :account, optional: true
   has_one_attached :audio, dependent: :destroy
 
   enum status: { pending: 'pending', in_progress: 'in_progress', completed: 'completed', failed: 'failed' }

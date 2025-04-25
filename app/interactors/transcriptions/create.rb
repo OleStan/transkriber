@@ -18,9 +18,9 @@ class Transcriptions::CreateContext < ActiveInteractor::Context::Base
   def audio_format_validation
     allowed_formats = %w[mp3 mp4 mpeg mpga m4a wav webm mov]
     ext = File.extname(audio.original_filename).delete('.').downcase
-    unless allowed_formats.include?(ext)
-      errors.add(:audio, 'format is not supported')
-    end
+    return if allowed_formats.include?(ext)
+
+    errors.add(:audio, 'format is not supported')
   end
 end
 
@@ -35,13 +35,13 @@ class Transcriptions::Create < ActiveInteractor::Base
     attachment = { io: io, filename: filename }
 
     context.audio_transcription = Transcription.create!(
-      audio:     attachment,
-      title:     File.basename(filename, '.*'),
-      duration:  AudioProcessing::DurationCalculator.calculate(tempfile_path(io))
+      audio: attachment,
+      title: File.basename(filename, '.*'),
+      duration: AudioProcessing::DurationCalculator.calculate(tempfile_path(io))
     )
 
     context.data = { transcription_id: context.audio_transcription.id }
-  rescue => e
+  rescue StandardError => e
     context.fail!(e.message)
   end
 
@@ -60,7 +60,7 @@ class Transcriptions::Create < ActiveInteractor::Base
 
   def build_data
     context.data = {
-      transcription_id: audio_transcription.id,
+      transcription_id: audio_transcription.id
     }
   end
 

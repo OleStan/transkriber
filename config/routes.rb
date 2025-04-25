@@ -1,6 +1,8 @@
 require 'sidekiq/web'
 
 Rails.application.routes.draw do
+  resources :accounts
+  devise_for :users
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   mount ActionCable.server => '/cable'
 
@@ -25,6 +27,9 @@ Rails.application.routes.draw do
   end
 
   namespace :ajax do
+    resources :accounts do
+      resources :users
+    end
     resources :transcriptions, only: %i[index show create destroy]
   end
 
