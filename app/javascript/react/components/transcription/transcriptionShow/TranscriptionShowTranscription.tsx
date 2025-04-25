@@ -1,5 +1,4 @@
 import { useMemo, useState, useCallback, memo } from 'react';
-import { FixedSizeList as VirtualizedList } from 'react-window';
 import Button from '@mui/joy/Button';
 import Grid from '@mui/joy/Grid';
 import List from '@mui/joy/List';
@@ -91,19 +90,6 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: Transcription
     }
   }, [transcriptWithTimestamps]);
 
-  // Virtualized row renderer
-  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
-    <div style={style}>
-      <SegmentRow
-        t={transcriptionSegments[index]}
-        hoveredId={hoveredId}
-        handleMouseEnter={handleMouseEnter}
-        handleMouseLeave={handleMouseLeave}
-        handleClick={handleClick}
-      />
-    </div>
-  );
-
   return (
     <>
       <Button
@@ -116,14 +102,18 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: Transcription
         Copy with Timestamps
       </Button>
       {transcriptionSegments && transcriptionSegments.length > 0 ? (
-        <VirtualizedList
-          height={400}
-          itemCount={transcriptionSegments.length}
-          itemSize={90}
-          width='100%'
-        >
-          {Row}
-        </VirtualizedList>
+        <List sx={{ maxHeight: 400, overflowY: 'auto' }}>
+          {transcriptionSegments.map((t) => (
+            <SegmentRow
+              key={t.id}
+              t={t}
+              hoveredId={hoveredId}
+              handleMouseEnter={handleMouseEnter}
+              handleMouseLeave={handleMouseLeave}
+              handleClick={handleClick}
+            />
+          ))}
+        </List>
       ) : (
         <Typography>No transcription segments available.</Typography>
       )}

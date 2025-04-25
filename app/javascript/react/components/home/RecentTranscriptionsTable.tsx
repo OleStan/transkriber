@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Typography from '@mui/joy/Typography';
 import TranscriptionsTableBase from '../transcription/transcriptionsTable/TranscriptionsTableBase';
 import { useGetTranscriptionsQuery, useDeleteTranscriptionMutation } from '../../redux/resourcesApi/transcriptions/transcriptionsSlice';
@@ -6,7 +6,6 @@ import { Transcription } from '../../redux/resourcesApi/transcriptions/types';
 import { useAppNavigate } from '../../helpers/navigationHelpers';
 import { useNotification } from '../../contexts/NotificationContext';
 import en from '../../locales/en';
-import { locales } from '../../locales';
 import Sheet from '@mui/joy/Sheet';
 import CircularProgress from '@mui/joy/CircularProgress';
 
