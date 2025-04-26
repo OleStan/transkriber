@@ -1,7 +1,10 @@
 import Typography from '@mui/joy/Typography';
+import React, { useEffect, useState } from 'react';
 import Stack from '@mui/joy/Stack';
 import Box from '@mui/joy/Box';
 import { Link } from 'react-router-dom';
+import useActionCable from '../../../hooks/useActionCable';
+import { useGetTranscriptionQuery } from '../../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 
 export type TemplateOutlineRowProps = {
   id: number;
@@ -9,11 +12,28 @@ export type TemplateOutlineRowProps = {
   createdAtFormatted: string;
 };
 
-export const TemplateOutlineRow = ({
-  id,
-  audioFilename,
-  createdAtFormatted,
-}: TemplateOutlineRowProps) => {
+export const TemplateOutlineRow = ({ id, audioFilename: initialFilename, createdAtFormatted }: TemplateOutlineRowProps) => {
+  // WebSocket for this transcription row
+  const messages = useActionCable('TranscriptionChannel', String(id)) as any[];
+  // Query for updated transcription details
+  const { data: response, refetch } = useGetTranscriptionQuery(id);
+  const [filename, setFilename] = useState<string | null>(initialFilename);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (['in_progress', 'completed'].includes(last.status)) {
+      refetch();
+    }
+  }, [messages, refetch]);
+
+  useEffect(() => {
+    const newFilename = response?.transcriptions?.[0]?.audioFilename;
+    if (newFilename && newFilename !== filename) {
+      setFilename(newFilename);
+    }
+  }, [response, filename]);
+
   return (
     <Box
       key={id}
@@ -31,7 +51,7 @@ export const TemplateOutlineRow = ({
     >
       <Link to={`/transcriptions/${id}/`} style={{ textDecoration: 'none', color: 'inherit' }}>
         <Stack direction='row' spacing={2} alignItems='center'>
-          <Typography level='body-sm'>{audioFilename ?? 'No Filename'}</Typography>
+          <Typography level='body-sm'>{filename ?? 'No Filename'}</Typography>
           <Typography level='body-sm'>{createdAtFormatted}</Typography>
         </Stack>
       </Link>

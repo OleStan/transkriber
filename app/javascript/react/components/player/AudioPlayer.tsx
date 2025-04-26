@@ -8,7 +8,22 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import { Box } from '@mui/joy';
 import Typography from '@mui/joy/Typography';
+import CircularProgress from '@mui/joy/CircularProgress';
 import useAudioStore from '../../stores/useAudioStore';
+import { Howl } from 'howler';
+
+// Suppress Howl stop push error
+if (!(Howl.prototype as any)._origStop) {
+  const origStop = Howl.prototype.stop;
+  (Howl.prototype as any)._origStop = origStop;
+  Howl.prototype.stop = function(...args: any[]) {
+    try {
+      return (this as any)._origStop.apply(this, args);
+    } catch (e) {
+      console.warn('Howl.stop error suppressed:', e);
+    }
+  };
+}
 
 interface AudioPlayerProps {
   src: string;
@@ -22,12 +37,36 @@ const formatTime = (seconds: number): string => {
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };
 
+// Error boundary to catch audio player errors
+class AudioPlayerErrorBoundary extends React.Component<{children?: React.ReactNode}, {hasError: boolean}> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+    this.resetError = this.resetError.bind(this);
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch(error: any, info: any) { console.error('AudioPlayer error:', error, info); }
+  resetError() { this.setState({ hasError: false }); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
+          <Typography level='body-md' color='danger'>Audio player encountered an error.</Typography>
+          <Button onClick={this.resetError}>Retry</Button>
+        </Box>
+      );
+    }
+    return <>{this.props.children}</>;
+  }
+}
+
 function AudioPlayer({ src, duration }: AudioPlayerProps) {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1.0);
   const [audioDuration, setAudioDuration] = useState(duration);
   const { seek, setSeek } = useAudioStore(state => ({ seek: state.seek, setSeek: state.setSeek }));
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [loading, setLoading] = useState(true);
   const howlerRef = useRef<ReactHowler>(null);
 
   const togglePlay = (): void => setPlaying(!playing);
@@ -44,7 +83,7 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
 
       const audioSourceNode = howlerRef.current.audio.source;
       if (audioSourceNode) {
-        audioSourceNode.playbackRate.value = rate;
+        audioSourceNode.playbackRate.value = playbackRate;
         audioSourceNode.preservesPitch = true;
       }
     }
@@ -55,6 +94,7 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
       const soundDuration = howlerRef.current.duration();
       setAudioDuration(soundDuration);
     }
+    setLoading(false);
   };
 
   const handleSeekChange = (event: Event, newValue: number | number[]): void => {
@@ -81,7 +121,7 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
   }, [playing]); // Only re-run this effect if `playing` changes
 
   useEffect(() => {
-    setTimeout(handleLoadAudio, 100); // Adjust based on actual load behavior
+    setLoading(true);
   }, [src]);
 
   useEffect(() => {
@@ -94,8 +134,16 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
     setSeek(audioDuration);
   };
 
+  if (!src) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <>
+    <AudioPlayerErrorBoundary>
       <ReactHowler
         src={src}
         playing={playing}
@@ -105,93 +153,99 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
         onLoad={() => handleLoadAudio()}
         onEnd={handleAudioEnd}
       />
-      <Box
-        sx={{
-          position: 'sticky',
-          top: '-12px',
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'stretch',
-          gap: '10px',
-          maxWidth: '100vw',
-          backgroundColor: '#F2F5F2',
-          borderRadius: '12px',
-          px: '20px',
-          pt: '15px',
-          pb: '7px',
-          zIndex: 10,
-        }}
-      >
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
         <Box
           sx={{
+            position: 'sticky',
+            top: '-12px',
+            width: '100%',
             display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '15px',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+            gap: '10px',
+            maxWidth: '100vw',
+            backgroundColor: '#F2F5F2',
+            borderRadius: '12px',
+            px: '20px',
+            pt: '15px',
+            pb: '7px',
+            zIndex: 10,
           }}
         >
           <Box
             sx={{
               display: 'flex',
+              flexDirection: 'row',
               alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '15px',
             }}
           >
-            <VolumeUpIcon />
-            <Slider
-              aria-label='Volume'
-              value={volume}
-              onChange={handleVolumeChange}
-              min={0}
-              color={'neutral'}
-              max={1}
-              step={0.01}
-              size={'sm'}
-              sx={{ width: '100px' }}
-            />
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              <VolumeUpIcon />
+              <Slider
+                aria-label='Volume'
+                value={volume}
+                onChange={handleVolumeChange}
+                min={0}
+                color={'neutral'}
+                max={1}
+                step={0.01}
+                size={'sm'}
+                sx={{ width: '100px' }}
+              />
+            </Box>
+            <Button
+              onClick={togglePlay}
+              color='success'
+              variant='solid'
+              sx={{ borderRadius: '50%', padding: '10px' }}
+            >
+              {playing ? <PauseIcon /> : <PlayArrowIcon />}
+            </Button>
+            <Button
+              onClick={updatePlaybackRate}
+              variant='solid'
+              color={'success'}
+              startDecorator={<SpeedIcon />}
+            >
+              {playbackRate.toFixed(2)}
+            </Button>
           </Box>
-          <Button
-            onClick={togglePlay}
-            color='success'
-            variant='solid'
-            sx={{ borderRadius: '50%', padding: '10px' }}
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: '15px',
+            }}
           >
-            {playing ? <PauseIcon /> : <PlayArrowIcon />}
-          </Button>
-          <Button
-            onClick={updatePlaybackRate}
-            variant='solid'
-            color={'success'}
-            startDecorator={<SpeedIcon />}
-          >
-            {playbackRate.toFixed(2)}
-          </Button>
+            <Typography level='body-sm'>{formatTime(seek)}</Typography>
+            <Slider
+              aria-label='Seek'
+              value={seek}
+              min={0}
+              max={audioDuration}
+              step={1}
+              size={'sm'}
+              color={'neutral'}
+              onChange={handleSeekChange}
+            />
+            <Typography level='body-sm'>{formatTime(audioDuration)}</Typography>
+          </Box>
         </Box>
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: '15px',
-          }}
-        >
-          <Typography level='body-sm'>{formatTime(seek)}</Typography>
-          <Slider
-            aria-label='Seek'
-            value={seek}
-            min={0}
-            max={audioDuration}
-            step={1}
-            size={'sm'}
-            color={'neutral'}
-            onChange={handleSeekChange}
-          />
-          <Typography level='body-sm'>{formatTime(audioDuration)}</Typography>
-        </Box>
-      </Box>
-    </>
+      )}
+    </AudioPlayerErrorBoundary>
   );
 }
 

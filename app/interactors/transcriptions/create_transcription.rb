@@ -2,13 +2,7 @@
 
 class Transcriptions::CreateTranscription < ActiveInteractor::Base
   def perform
-    context.audio_transcription = Transcription.create!(
-      audio: { io: context.io, filename: context.filename },
-      title: File.basename(context.filename, '.*'),
-      duration: AudioProcessing::DurationCalculator.calculate(
-        context.io.respond_to?(:path) ? context.io.path : Tempfile.new.path
-      )
-    )
+    context.audio_transcription = Transcription.create!(**context.create_params)
   rescue StandardError => e
     context.fail!(e.message)
   end
