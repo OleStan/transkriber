@@ -10,20 +10,6 @@ import { Box } from '@mui/joy';
 import Typography from '@mui/joy/Typography';
 import CircularProgress from '@mui/joy/CircularProgress';
 import useAudioStore from '../../stores/useAudioStore';
-import { Howl } from 'howler';
-
-// Suppress Howl stop push error
-if (!(Howl.prototype as any)._origStop) {
-  const origStop = Howl.prototype.stop;
-  (Howl.prototype as any)._origStop = origStop;
-  Howl.prototype.stop = function(...args: any[]) {
-    try {
-      return (this as any)._origStop.apply(this, args);
-    } catch (e) {
-      console.warn('Howl.stop error suppressed:', e);
-    }
-  };
-}
 
 interface AudioPlayerProps {
   src: string;
@@ -36,29 +22,6 @@ const formatTime = (seconds: number): string => {
   const remainingSeconds = rounded % 60;
   return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };
-
-// Error boundary to catch audio player errors
-class AudioPlayerErrorBoundary extends React.Component<{children?: React.ReactNode}, {hasError: boolean}> {
-  constructor(props: any) {
-    super(props);
-    this.state = { hasError: false };
-    this.resetError = this.resetError.bind(this);
-  }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch(error: any, info: any) { console.error('AudioPlayer error:', error, info); }
-  resetError() { this.setState({ hasError: false }); }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
-          <Typography level='body-md' color='danger'>Audio player encountered an error.</Typography>
-          <Button onClick={this.resetError}>Retry</Button>
-        </Box>
-      );
-    }
-    return <>{this.props.children}</>;
-  }
-}
 
 function AudioPlayer({ src, duration }: AudioPlayerProps) {
   const [playing, setPlaying] = useState(false);
@@ -80,12 +43,6 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
     setPlaybackRate(newRate);
     if (howlerRef.current) {
       howlerRef.current.howler.rate(newRate);
-
-      const audioSourceNode = howlerRef.current.audio.source;
-      if (audioSourceNode) {
-        audioSourceNode.playbackRate.value = playbackRate;
-        audioSourceNode.preservesPitch = true;
-      }
     }
   };
 
@@ -130,6 +87,14 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
     }
   }, [seek]);
 
+  useEffect(() => {
+    return () => {
+      if (howlerRef.current) {
+        howlerRef.current.howler.unload();
+      }
+    };
+  }, [src]);
+
   const handleAudioEnd = () => {
     setSeek(audioDuration);
   };
@@ -143,8 +108,9 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
   }
 
   return (
-    <AudioPlayerErrorBoundary>
+    <>
       <ReactHowler
+        html5={true}
         src={src}
         playing={playing}
         volume={volume}
@@ -245,7 +211,7 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
           </Box>
         </Box>
       )}
-    </AudioPlayerErrorBoundary>
+    </>
   );
 }
 
