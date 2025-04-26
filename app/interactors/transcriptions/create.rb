@@ -2,7 +2,7 @@
 
 class Transcriptions::CreateContext < ActiveInteractor::Context::Base
   attributes :audio, :url, :language
-  attributes :audio_transcription
+  attributes :audio_transcription, :io, :filename
 
   validate :audio_or_url_present
   validate :audio_format_validation, if: -> { audio.present? }
@@ -24,67 +24,18 @@ class Transcriptions::CreateContext < ActiveInteractor::Context::Base
   end
 end
 
-# TODO: Make it Transaction Defered interactor
-class Transcriptions::Create < ActiveInteractor::Base
+class Transcriptions::Create < ActiveInteractor::Organizer::Base
   after_perform :transcribe_audio, if: -> { context.success? }
 
-  def perform
-    io, filename = fetch_media
-    io, filename = convert_video_to_audio(io, filename)
-
-    attachment = { io: io, filename: filename }
-
-    context.audio_transcription = Transcription.create!(
-      audio: attachment,
-      title: File.basename(filename, '.*'),
-      duration: AudioProcessing::DurationCalculator.calculate(tempfile_path(io))
-    )
-
-    context.data = { transcription_id: context.audio_transcription.id }
-  rescue StandardError => e
-    context.fail!(e.message)
+  organize do
+    add Transcriptions::FetchMedia
+    add Transcriptions::ConvertVideoToAudio
+    add Transcriptions::CreateTranscription
   end
 
   private
 
-  delegate :audio, :url, :language, to: :context
-
-  def fetch_media
-    if url.present?
-      downloaded = MediaDownloadService.new(url).download
-      [downloaded[:io], downloaded[:filename]]
-    else
-      [audio.tempfile, audio.original_filename]
-    end
-  end
-
-  def build_data
-    context.data = {
-      transcription_id: audio_transcription.id
-    }
-  end
-
-  def convert_video_to_audio(io, filename)
-    ext = File.extname(filename).delete('.').downcase
-    if %w[mp4 webm mov mpeg].include?(ext)
-      audio_blob = VideoToAudioService.call(io)
-      # Припускаємо, що VideoToAudioService повертає Hash { io:…, filename:… }
-      [audio_blob[:io], audio_blob[:filename]]
-    else
-      [io, filename]
-    end
-  end
-
-  def audio_file_name
-    File.basename(context.audio.original_filename, '.*') if context.audio.respond_to?(:original_filename)
-  end
-
-  def tempfile_path(io)
-    io.respond_to?(:path) ? io.path : Tempfile.new.path
-  end
-
   def transcribe_audio
-    # TranscribeAudioWorker.perform_async(audio_transcription.id, language) # TODO: Setup Sidekiq
-    TranscribeAudioWorker.perform_later(context.audio_transcription.id, language)
+    TranscribeAudioWorker.perform_later(context.audio_transcription.id, context.language)
   end
 end

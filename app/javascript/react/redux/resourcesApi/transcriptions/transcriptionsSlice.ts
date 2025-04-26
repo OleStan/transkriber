@@ -15,6 +15,13 @@ export const transcriptionsSlice = transcriberApi.injectEndpoints({
     getTranscriptions: builder.query<TranscriptionsResponse, number | null>({
       query: (page: number | null) => `transcriptions${page ? `?page=${page}` : ''}`,
       transformResponse: (response: TranscriptionsResponse) => toCamelCase(response),
+      providesTags: (result) =>
+        result?.transcriptions
+          ? [
+              ...result.transcriptions.map((t) => ({ type: 'Transcription' as const, id: t.id })),
+              { type: 'Transcription' as const, id: 'LIST' },
+            ]
+          : [{ type: 'Transcription' as const, id: 'LIST' }],
     }),
     createTranscription: builder.mutation<TranscriptionCreateSuccess, FormData>({
       query: (formData) => {
@@ -25,6 +32,13 @@ export const transcriptionsSlice = transcriberApi.injectEndpoints({
         };
       },
       transformResponse: (response: TranscriptionCreateSuccess) => toCamelCase(response),
+      invalidatesTags: (result) =>
+        result
+          ? [
+              { type: 'Transcription' as const, id: result.transcriptionId },
+              { type: 'Transcription' as const, id: 'LIST' },
+            ]
+          : [{ type: 'Transcription' as const, id: 'LIST' }],
     }),
     deleteTranscription: builder.mutation<TranscriptionsResponse, number>({
       query: (id) => {
@@ -34,6 +48,10 @@ export const transcriptionsSlice = transcriberApi.injectEndpoints({
         };
       },
       transformResponse: (response: TranscriptionsResponse) => toCamelCase(response),
+      invalidatesTags: (result, error, id) => [
+        { type: 'Transcription' as const, id },
+        { type: 'Transcription' as const, id: 'LIST' },
+      ],
     }),
   }),
 });

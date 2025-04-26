@@ -18,6 +18,7 @@ const TranscriptionsTable: React.FC<TranscriptionsTableProps> = ({ transcription
       const result = await deleteTranscription(transcriptionId).unwrap();
       if (result && result.transcriptions) {
         showNotification('Transcription deleted successfully', 'success');
+        // Data will auto-refresh via RTK Query tag invalidation
       } else {
         showNotification('Failed to delete transcription', 'danger');
       }

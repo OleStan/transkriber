@@ -152,6 +152,6 @@ class OpenAiWhisperService < ApplicationService
   def mocked_response
     sleep 5
     # MockedData::MOKED_OPENAI_WHISPER_RESPONSE
-    MockedData.mocked_openai_whisper_response(10)
+    MockedData.mocked_openai_whisper_response(100)
   end
 end

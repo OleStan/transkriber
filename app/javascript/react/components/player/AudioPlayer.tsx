@@ -41,7 +41,6 @@ function AudioPlayer({ src, duration }: AudioPlayerProps) {
     setPlaybackRate(newRate);
     if (howlerRef.current) {
       howlerRef.current.howler.rate(newRate);
-      debugger;
 
       const audioSourceNode = howlerRef.current.audio.source;
       if (audioSourceNode) {

@@ -1,13 +1,12 @@
 # frozen_string_literal: true
 
-class Transcriptions::IndexContext < ActiveInteractor::Context::Base 
+class Transcriptions::IndexContext < ActiveInteractor::Context::Base
   attributes :page
 
   attributes :data
 end
 
 class Transcriptions::Index < ActiveInteractor::Base
-
   def perform
     context.transcriptions = fetch_transcriptions
     context.data = build_data

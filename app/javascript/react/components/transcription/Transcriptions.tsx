@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGetTranscriptionsQuery } from '../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 import { useSearchParams } from 'react-router-dom';
 import Typography from '@mui/joy/Typography';
@@ -7,6 +7,7 @@ import Stack from '@mui/joy/Stack';
 import { Pagination } from '@mui/material';
 import TranscriptionsTable from './transcriptionsTable/TranscriptionsTable';
 import QuickAddFileOrUrl from '../home/QuickAddFile/QuickAddFileOrUrl';
+import { cable } from '../../lib/cable';
 
 const Transcriptions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -23,6 +24,24 @@ const Transcriptions = () => {
   useEffect(() => {
     if (isLoading) return;
   }, [transcriptions]);
+
+  const records = transcriptions?.transcriptions || [];
+  const [updates, setUpdates] = useState<Record<number, { status: string }>>({});
+  useEffect(() => {
+    if (!records.length) return;
+    const subs = records.map(({ id }) =>
+      cable.subscriptions.create(
+        { channel: 'TranscriptionChannel', room: id.toString() },
+        {
+          received(data: { status: string }) {
+            setUpdates(prev => ({ ...prev, [id]: data }));
+          },
+        }
+      )
+    );
+    return () => subs.forEach((sub: any) => sub.unsubscribe());
+  }, [records]);
+  const displayRecords = records.map(tr => ({ ...tr, status: updates[tr.id]?.status || tr.status }));
 
   if (isLoading) {
     return (
@@ -50,7 +69,7 @@ const Transcriptions = () => {
         <QuickAddFileOrUrl />
       ) : (
         <>
-          <TranscriptionsTable key={currentPage} transcriptions={transcriptions?.transcriptions} />
+          <TranscriptionsTable key={currentPage} transcriptions={displayRecords} />
           {transcriptions && transcriptions?.totalPages > 1 && (
             <Stack direction='row' spacing={2} justifyContent='center' mt={2}>
               <Pagination

@@ -18,6 +18,7 @@ class Ajax::TranscriptionsController < ApplicationController
   end
 
   def create
+    # For URL uploads, defer media download to background job
     result = Transcriptions::Create.perform(
       audio: transcriptions_params[:audio],
       url: transcriptions_params[:url],
@@ -25,7 +26,7 @@ class Ajax::TranscriptionsController < ApplicationController
     )
 
     if result.success?
-      render json: result.data, status: :created
+      render json: { transcription_id: result.audio_transcription.id }, status: :created
     else
       render json: { errors: result.errors.full_messages }, status: :unprocessable_entity
     end
