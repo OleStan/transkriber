@@ -24,9 +24,9 @@ class Ajax::Transcriptions::IndexSerializer < ActiveModel::Serializer
   def duration_to_hms
     return if object.duration.nil?
 
-    total_seconds = object.duration
+    total_seconds = object.duration.to_i
     hours = total_seconds / 3600
-    minutes = (total_seconds / 60)
+    minutes = (total_seconds % 3600) / 60
     seconds = total_seconds % 60
     "#{hours}h #{minutes}m #{seconds}s"
   end

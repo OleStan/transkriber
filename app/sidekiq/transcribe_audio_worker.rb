@@ -14,6 +14,12 @@ class TranscribeAudioWorker < ApplicationJob
       end
       transcription.audio.attach(io: fetch_ctx.io, filename: fetch_ctx.filename)
       transcription.in_progress!
+      # Calculate and update duration after attachment
+      if transcription.audio.attached?
+        audio_path = transcription.audio.blob.service.send(:path_for, transcription.audio.key)
+        duration = AudioProcessing::DurationCalculator.calculate(audio_path)
+        transcription.update(duration: duration, title: fetch_ctx.filename)
+      end
     end
 
     # guard: ensure audio is attached before calling transcription service
@@ -22,6 +28,7 @@ class TranscribeAudioWorker < ApplicationJob
       transcription.failed!
       return
     end
+
     # proceed to actual transcription
     result = Transcriptions::Transcribe.perform(transcription: transcription, language: language)
 

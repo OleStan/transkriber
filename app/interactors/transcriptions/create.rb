@@ -2,7 +2,7 @@
 
 class Transcriptions::CreateContext < ActiveInteractor::Context::Base
   attributes :audio, :url, :language
-  attributes :audio_transcription, :io, :filename, :create_params
+  attributes :audio_transcription, :io, :filename
 
   validate :audio_or_url_present
   validate :audio_format_validation, if: -> { audio.present? }
@@ -31,10 +31,8 @@ class Transcriptions::Create < ActiveInteractor::Organizer::Base
   after_perform :transcribe_audio, if: -> { context.success? }
 
   organize do
-    # add Transcriptions::FetchMedia
     add Transcriptions::ConvertVideoToAudio, if: -> { needs_video_conversion? }
     add Transcriptions::CreateTranscription, before: :set_create_params
-    # add Transcriptions::AttachAudio, if: -> { context.io.present? }
   end
 
   private
@@ -51,8 +49,7 @@ class Transcriptions::Create < ActiveInteractor::Organizer::Base
                               { title: context.url, status: :uploading }
                             else
                               {
-                                # audio: { io: context.audio.tempfile, filename: context.audio.original_filename },
-                                # audio: context.audio,
+                                audio: context.audio,
                                 title: File.basename(context.audio.original_filename, '.*'),
                                 duration: AudioProcessing::DurationCalculator.calculate(
                                   context.audio.tempfile.respond_to?(:path) ? context.audio.tempfile.path : Tempfile.new.path
@@ -63,12 +60,7 @@ class Transcriptions::Create < ActiveInteractor::Organizer::Base
   end
 
   def transcribe_audio
-    # TODO: resolve issue with attachment in interactor
-    context.audio_transcription.audio.attach(io: context.io, filename: context.filename)
-
     TranscribeAudioWorker.perform_later(context.audio_transcription.id, context.url, context.language)
-
-    # TranscribeAudioWorker.new.perform(context.audio_transcription.id, context.url, context.language)
   end
 
   def needs_video_conversion?
