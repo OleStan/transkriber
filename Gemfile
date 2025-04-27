@@ -106,3 +106,5 @@ end
 gem 'tailwindcss-rails', '~> 2.0'
 
 gem 'sidekiq', '~> 7.2'
+
+gem 'google-cloud-speech', '~> 2.0'

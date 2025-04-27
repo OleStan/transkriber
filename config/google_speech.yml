@@ -1,0 +1,12 @@
+# Google Cloud Speech configuration per environment
+development:
+  project_id: <%= ENV['GOOGLE_SPEECH_PROJECT_ID'] || 'your-project-id' %>
+  credentials: <%= ENV['GOOGLE_SPEECH_CREDENTIALS_PATH'] || Rails.root.join('config','google_speech_dev_key.json').to_s %>
+
+test:
+  project_id: <%= ENV['GOOGLE_SPEECH_PROJECT_ID'] || 'your-project-id' %>
+  credentials: <%= ENV['GOOGLE_SPEECH_CREDENTIALS_PATH'] || Rails.root.join('config','google_speech_test_key.json').to_s %>
+
+production:
+  project_id: <%= ENV['GOOGLE_SPEECH_PROJECT_ID'] %>
+  credentials: <%= ENV['GOOGLE_SPEECH_CREDENTIALS_PATH'] %>
