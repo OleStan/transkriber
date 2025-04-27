@@ -27,23 +27,32 @@ end
 class Transcriptions::Create < ActiveInteractor::Organizer::Base
   VIDEO_EXTENSIONS = %w[mp4 webm mov mpeg].freeze
 
-  before_perform :set_create_params
+  before_perform :set_audio_context, if: -> { context.audio.present? }
   after_perform :transcribe_audio, if: -> { context.success? }
 
   organize do
     # add Transcriptions::FetchMedia
     add Transcriptions::ConvertVideoToAudio, if: -> { needs_video_conversion? }
-    add Transcriptions::CreateTranscription
+    add Transcriptions::CreateTranscription, before: :set_create_params
+    # add Transcriptions::AttachAudio, if: -> { context.io.present? }
   end
 
   private
+
+  def set_audio_context
+    tf = context.audio.tempfile
+    tf.rewind if tf.respond_to?(:rewind)
+    context.io = tf
+    context.filename = context.audio.original_filename
+  end
 
   def set_create_params
     context.create_params = if context.url.present?
                               { title: context.url, status: :uploading }
                             else
                               {
-                                audio: { io: context.audio.tempfile, filename: context.audio.original_filename },
+                                # audio: { io: context.audio.tempfile, filename: context.audio.original_filename },
+                                # audio: context.audio,
                                 title: File.basename(context.audio.original_filename, '.*'),
                                 duration: AudioProcessing::DurationCalculator.calculate(
                                   context.audio.tempfile.respond_to?(:path) ? context.audio.tempfile.path : Tempfile.new.path
@@ -54,9 +63,12 @@ class Transcriptions::Create < ActiveInteractor::Organizer::Base
   end
 
   def transcribe_audio
+    # TODO: resolve issue with attachment in interactor
+    context.audio_transcription.audio.attach(io: context.io, filename: context.filename)
+
     TranscribeAudioWorker.perform_later(context.audio_transcription.id, context.url, context.language)
 
-    # TranscribeAudioWorker.new.perform(context.audio_transcription.id, context.language)
+    # TranscribeAudioWorker.new.perform(context.audio_transcription.id, context.url, context.language)
   end
 
   def needs_video_conversion?

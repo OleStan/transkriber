@@ -17,6 +17,7 @@ class OpenAiWhisperService < ApplicationService
   end
 
   def call
+    raise OpenAiError, 'No audio blob provided to transcribe' unless @blob
     result = nil
     @blob.open(tmpdir: Rails.root.join('tmp')) do |file|
       format = @blob.filename.extension_without_delimiter

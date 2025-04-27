@@ -16,8 +16,14 @@ class TranscribeAudioWorker < ApplicationJob
       transcription.in_progress!
     end
 
+    # guard: ensure audio is attached before calling transcription service
+    unless transcription.audio.attached?
+      Rails.logger.error("No audio attached for Transcription ##{transcription.id}, aborting transcription")
+      transcription.failed!
+      return
+    end
     # proceed to actual transcription
-    result = Transcriptions::Transcribe.perform(transcription:, language:)
+    result = Transcriptions::Transcribe.perform(transcription: transcription, language: language)
 
     return if result.success?
     transcription.failed!

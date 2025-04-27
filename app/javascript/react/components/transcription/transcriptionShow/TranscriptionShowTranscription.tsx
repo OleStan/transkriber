@@ -12,6 +12,7 @@ import {
   TranscriptionDetails,
   TranscriptionSegment,
 } from '../../../redux/resourcesApi/transcriptions/types';
+import en from '../../../locales/en';
 
 type SegmentRowProps = {
   t: TranscriptionSegment;
@@ -99,10 +100,10 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: Transcription
         onClick={handleCopy}
         disabled={!transcriptWithTimestamps}
       >
-        Copy with Timestamps
+        {en.transcription.show.copyWithTimestamps}
       </Button>
       {transcriptionSegments && transcriptionSegments.length > 0 ? (
-        <List sx={{ maxHeight: 400, overflowY: 'auto' }}>
+        <List>
           {transcriptionSegments.map((t) => (
             <SegmentRow
               key={t.id}
@@ -115,7 +116,7 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: Transcription
           ))}
         </List>
       ) : (
-        <Typography>No transcription segments available.</Typography>
+        <Typography>{en.transcription.show.noSegments}</Typography>
       )}
       <Snackbar
         open={copied}
@@ -123,7 +124,7 @@ const TranscriptionShowTranscription = ({ transcriptionSegments }: Transcription
         onClose={() => setCopied(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        Copied to clipboard
+        {en.transcription.show.copiedToClipboard}
       </Snackbar>
     </>
   );

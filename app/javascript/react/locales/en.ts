@@ -22,6 +22,11 @@ const en = {
       delete: 'Delete',
       error: 'Error occurred:',
     },
+    show: {
+      copyWithTimestamps: 'Copy with Timestamps',
+      copiedToClipboard: 'Copied to clipboard',
+      noSegments: 'No transcription segments available.',
+    },
   },
   home: {
     recentTranscriptionsTable: {

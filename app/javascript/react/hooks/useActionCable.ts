@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { cable } from '../lib/cable';
 
 interface Message {
-  content: string;
+  transcription_json?: any;
+  status?: string;
+  [key: string]: any;
 }
 
 function useActionCable(channelName: string, room?: string) {
