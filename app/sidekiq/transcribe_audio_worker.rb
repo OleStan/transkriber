@@ -1,3 +1,5 @@
+require_relative '../services/open_ai_whisper_service'
+
 class TranscribeAudioWorker < ApplicationJob
   queue_as :transcriptions
   retry_on StandardError, wait: :exponentially_longer, attempts: 3

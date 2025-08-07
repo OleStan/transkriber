@@ -54,12 +54,31 @@ const Login: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
-        padding: 2
+        padding: 2,
+        bgcolor: '#141b1f',
+        color: 'white',
+        fontFamily: '"Spline Sans", "Noto Sans", sans-serif'
       }}
     >
-      <Card sx={{ maxWidth: 400, width: '100%' }}>
-        <CardContent>
-          <Typography variant="h5" component="h1" gutterBottom align="center">
+      <Card sx={{ 
+        maxWidth: 400, 
+        width: '100%',
+        bgcolor: '#2b3840',
+        borderRadius: '16px',
+        boxShadow: 'none'
+      }}>
+        <CardContent sx={{ p: 4 }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            gutterBottom 
+            align="center"
+            sx={{ 
+              color: 'white',
+              fontWeight: 'bold',
+              mb: 3
+            }}
+          >
             Sign In
           </Typography>
           
@@ -72,41 +91,78 @@ const Login: React.FC = () => {
           <form onSubmit={handleSubmit}>
             <Stack spacing={2}>
               <FormControl>
-                <FormLabel>Email</FormLabel>
+                <FormLabel sx={{ color: 'white', mb: 1, fontSize: '14px', fontWeight: 'medium' }}>Email</FormLabel>
                 <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   fullWidth
+                  sx={{
+                    bgcolor: '#141b1f',
+                    borderRadius: '8px',
+                    p: 1.5,
+                    color: 'white',
+                    '&:before': { display: 'none' },
+                    '&:after': { display: 'none' },
+                    '&:hover:not(.Mui-disabled):before': { display: 'none' },
+                    '&::placeholder': {
+                      color: '#9db1be',
+                      opacity: 1,
+                    },
+                  }}
                 />
               </FormControl>
               
               <FormControl>
-                <FormLabel>Password</FormLabel>
+                <FormLabel sx={{ color: 'white', mb: 1, fontSize: '14px', fontWeight: 'medium' }}>Password</FormLabel>
                 <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   fullWidth
+                  sx={{
+                    bgcolor: '#141b1f',
+                    borderRadius: '8px',
+                    p: 1.5,
+                    color: 'white',
+                    '&:before': { display: 'none' },
+                    '&:after': { display: 'none' },
+                    '&:hover:not(.Mui-disabled):before': { display: 'none' },
+                  }}
                 />
               </FormControl>
               
               <Button 
                 type="submit" 
-                variant="contained" 
-                color="primary" 
+                variant="contained"
                 disabled={isLoading}
                 fullWidth
+                sx={{
+                  bgcolor: '#4a90e2',
+                  color: 'white',
+                  borderRadius: '8px',
+                  py: 1.5,
+                  fontSize: '16px',
+                  fontWeight: 'medium',
+                  textTransform: 'none',
+                  '&:hover': {
+                    bgcolor: '#357abd'
+                  },
+                  '&:disabled': {
+                    bgcolor: '#3d505c',
+                    color: '#9db1be'
+                  }
+                }}
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </Stack>
           </form>
           
-          <Divider sx={{ my: 2 }}>
-            <Typography variant="body2" color="textSecondary">
+          <Divider sx={{ my: 3, bgcolor: '#3d505c' }}>
+            <Typography variant="body2" sx={{ color: '#9db1be', px: 2 }}>
               OR
             </Typography>
           </Divider>
@@ -115,17 +171,38 @@ const Login: React.FC = () => {
             variant="outlined" 
             fullWidth 
             startIcon={<GoogleIcon />}
-            sx={{ mt: 2, mb: 2 }}
+            sx={{ 
+              mt: 2, 
+              mb: 3,
+              borderColor: '#3d505c',
+              color: 'white',
+              borderRadius: '8px',
+              py: 1.5,
+              fontSize: '16px',
+              fontWeight: 'medium',
+              textTransform: 'none',
+              '&:hover': {
+                borderColor: '#4a90e2',
+                bgcolor: 'rgba(74, 144, 226, 0.1)'
+              }
+            }}
             onClick={() => window.location.href = '/users/auth/google_oauth2'}
           >
             Sign in with Google
           </Button>
           
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 2, bgcolor: '#3d505c' }} />
           
-          <Typography align="center">
+          <Typography align="center" sx={{ color: '#9db1be' }}>
             Don't have an account?{' '}
-            <Link to="/signup" style={{ textDecoration: 'none' }}>
+            <Link 
+              to="/signup" 
+              style={{ 
+                textDecoration: 'none', 
+                color: '#4a90e2',
+                fontWeight: 'medium'
+              }}
+            >
               Sign Up
             </Link>
           </Typography>

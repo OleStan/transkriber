@@ -1,20 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Sheet from '@mui/joy/Sheet';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab';
+import LinearProgress from '@mui/material/LinearProgress';
+import Stack from '@mui/material/Stack';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
-import Typography from '@mui/joy/Typography';
-import Button from '@mui/joy/Button';
-import Modal from '@mui/joy/Modal';
-import ModalDialog from '@mui/joy/ModalDialog';
-import DialogContent from '@mui/joy/DialogContent';
-import Input from '@mui/joy/Input';
-import Stack from '@mui/joy/Stack';
-import Box from '@mui/joy/Box';
-import { DialogTitle, ModalClose } from '@mui/joy';
-import Tabs from '@mui/joy/Tabs';
-import TabList from '@mui/joy/TabList';
-import Tab, { tabClasses } from '@mui/joy/Tab';
-import TabPanel from '@mui/joy/TabPanel';
-import LinearProgress from '@mui/joy/LinearProgress';
+import CloseIcon from '@mui/icons-material/Close';
+import IconButton from '@mui/material/IconButton';
 
 import LanguageSelector from './LanguageSelector';
 import { useNotification } from '../../../contexts/NotificationContext';
@@ -112,69 +112,116 @@ const QuickAddFileOrUrl = () => {
   }, []);
 
   return (
-    <Sheet variant="outlined" sx={{ p: 4, borderRadius: 8, mb: 2 }}>
-      <Tabs
-        variant="outlined"
-        aria-label="Transcribe source"
-        value={inputType === 'file' ? 0 : 1}
-        onChange={(_, v) => setInputType(v === 0 ? 'file' : 'url')}
-        defaultValue={0}
-        sx={{ width: '100%', borderRadius: 'lg', boxShadow: 'sm', overflow: 'auto', mb: 2 }}
-      >
-        <TabList
-          disableUnderline
-          tabFlex={1}
+    <Paper 
+      sx={{ 
+        bgcolor: '#243947',
+        color: 'white',
+        p: 4, 
+        borderRadius: '12px', 
+        mb: 2, 
+        border: '1px solid #3d505c',
+        fontFamily: '"Spline Sans", "Noto Sans", sans-serif'
+      }}
+    >
+      <Box sx={{ borderBottom: 1, borderColor: '#3d505c', mb: 3 }}>
+        <Tabs 
+          value={inputType === 'file' ? 0 : 1}
+          onChange={(_, newValue: number) => setInputType(newValue === 0 ? 'file' : 'url')}
+          aria-label="Transcribe source"
           sx={{
-            [`& .${tabClasses.root}`]: {
-              fontSize: 'sm',
-              fontWeight: 'lg',
-              [`&[aria-selected="true"]`]: {
-                color: 'primary.500',
-                bgcolor: 'background.surface',
-              },
-              [`&.${tabClasses.focusVisible}`]: {
-                outlineOffset: '-4px',
-              },
-            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#1994e6'
+            }
           }}
         >
-          <Tab disableIndicator variant="soft" sx={{ flexGrow: 1 }}>
-            {en.quickAddFile.quickAddFileOrUrl.fileTab}
-          </Tab>
-          <Tab disableIndicator variant="soft" sx={{ flexGrow: 1 }}>
-            {en.quickAddFile.quickAddFileOrUrl.urlTab}
-          </Tab>
-        </TabList>
-        <TabPanel value={0}>
+          <Tab 
+            label={en.quickAddFile.quickAddFileOrUrl.fileTab}
+            sx={{
+              color: 'white',
+              fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
+              '&.Mui-selected': {
+                color: '#1994e6'
+              }
+            }}
+          />
+          <Tab 
+            label={en.quickAddFile.quickAddFileOrUrl.urlTab}
+            sx={{
+              color: 'white',
+              fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
+              '&.Mui-selected': {
+                color: '#1994e6'
+              }
+            }}
+          />
+        </Tabs>
+      </Box>
+      
+      {inputType === 'file' && (
           <Box
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             sx={{
-              border: '2px dashed #90caf9',
-              borderRadius: 8,
+              border: '2px dashed #1994e6',
+              borderRadius: '12px',
               p: 4,
               textAlign: 'center',
-              bgcolor: '#f9f9fb',
-              mb: 2,
+              bgcolor: '#1a2832',
+              mb: 3,
               cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                bgcolor: '#1e2d38',
+                borderColor: '#2da8ff'
+              }
             }}
             onClick={handleBrowse}
           >
-            <DriveFolderUploadIcon sx={{ fontSize: 48, color: '#1976d2', mb: 1 }} />
-            <Typography level="body-lg">
+            <DriveFolderUploadIcon sx={{ fontSize: 64, color: '#1994e6', mb: 2 }} />
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                color: 'white',
+                fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
+                fontWeight: 'medium',
+                mb: 1
+              }}
+            >
               {en.quickAddFile.quickAddFileOrUrl.dragDrop}
-              <span style={{ color: '#1976d2', textDecoration: 'underline' }}>
+              <Box component="span" sx={{ color: '#1994e6', textDecoration: 'underline', ml: 0.5 }}>
                 {en.quickAddFile.quickAddFileOrUrl.browse}
-              </span>.
+              </Box>
             </Typography>
-            <Typography level="body-sm" sx={{ mt: 1, color: '#888' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#a0aab5',
+                fontFamily: '"Spline Sans", "Noto Sans", sans-serif'
+              }}
+            >
               {en.quickAddFile.quickAddFileOrUrl.supportedFormats}
             </Typography>
-            {isSubmitting && <LinearProgress sx={{ mt: 2 }} />}
             {isSubmitting && (
-              <Typography level="body-sm" sx={{ mt: 1 }}>
-                {selectedFile ? en.quickAddFile.quickAddFileOrUrl.uploading : ''}
-              </Typography>
+              <Box sx={{ mt: 3 }}>
+                <LinearProgress 
+                  sx={{ 
+                    bgcolor: '#3d505c',
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: '#1994e6'
+                    }
+                  }} 
+                />
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    mt: 1, 
+                    color: '#1994e6',
+                    fontFamily: '"Spline Sans", "Noto Sans", sans-serif'
+                  }}
+                >
+                  {selectedFile ? en.quickAddFile.quickAddFileOrUrl.uploading : ''}
+                </Typography>
+              </Box>
             )}
             <input
               type="file"
@@ -184,95 +231,169 @@ const QuickAddFileOrUrl = () => {
               onChange={handleFileChange}
             />
           </Box>
-        </TabPanel>
-        <TabPanel value={1}>
-          <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-            <Input
+      )}
+      
+      {inputType === 'url' && (
+          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+            <TextField
               placeholder={en.quickAddFile.quickAddFileOrUrl.pasteUrl}
               fullWidth
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
-              sx={{ mb: 2, flex: 1 }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   setOpenDialog(true);
                 }
               }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: '#1a2832',
+                  color: 'white',
+                  borderRadius: '8px',
+                  fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
+                  '& fieldset': {
+                    borderColor: '#3d505c',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: '#1994e6',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#1994e6',
+                  }
+                },
+                '& .MuiInputBase-input': {
+                  color: 'white',
+                  '&::placeholder': {
+                    color: '#a0aab5',
+                    opacity: 1
+                  }
+                }
+              }}
             />
             <Button
-              variant="solid"
-              color="primary"
-              sx={{ height: '40px', alignSelf: 'center', mb: 2 }}
+              variant="contained"
+              sx={{
+                bgcolor: '#1994e6',
+                color: 'white',
+                borderRadius: '8px',
+                px: 3,
+                fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
+                fontWeight: 'medium',
+                '&:hover': {
+                  bgcolor: '#1580cc'
+                },
+                '&:disabled': {
+                  bgcolor: '#3d505c',
+                  color: '#a0aab5'
+                }
+              }}
               disabled={!urlInput.trim()}
               onClick={() => setOpenDialog(true)}
             >
               {en.quickAddFile.quickAddFileOrUrl.submit}
             </Button>
           </Box>
-        </TabPanel>
-      </Tabs>
+      )}
       <LanguageSelector language={language} setLanguage={setLanguage} />
-      <Modal
+      <Dialog
         open={openDialog}
         onClose={() => {
           setOpenDialog(false);
           resetState();
         }}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: '#243947',
+            color: 'white',
+            border: '1px solid #3d505c'
+          }
+        }}
       >
-        <ModalDialog>
-          <ModalClose
+        <DialogTitle 
+          sx={{ 
+            color: 'white',
+            fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
+          {inputType === 'file'
+            ? en.quickAddFile.quickAddFileOrUrl.modalTitleFile
+            : en.quickAddFile.quickAddFileOrUrl.modalTitleUrl}
+          <IconButton
             onClick={() => {
               setOpenDialog(false);
               resetState();
             }}
-          />
-          <DialogTitle>
-            {inputType === 'file'
-              ? en.quickAddFile.quickAddFileOrUrl.modalTitleFile
-              : en.quickAddFile.quickAddFileOrUrl.modalTitleUrl}
-          </DialogTitle>
-          <DialogContent>
-            <Stack spacing={2}>
-              {inputType === 'file' && selectedFile && (
-                <Typography>
-                  {en.quickAddFile.quickAddFileOrUrl.fileLabel} <strong>{selectedFile.name}</strong> (
-                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-                </Typography>
-              )}
-              {inputType === 'url' && (
-                <Typography>
-                  {en.quickAddFile.quickAddFileOrUrl.urlLabel} <strong>{urlInput}</strong>
-                </Typography>
-              )}
-              <Typography>
-                {en.quickAddFile.quickAddFileOrUrl.selectLanguage}
+            sx={{ color: 'white' }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ color: 'white' }}>
+          <Stack spacing={2}>
+            {inputType === 'file' && selectedFile && (
+              <Typography sx={{ fontFamily: '"Spline Sans", "Noto Sans", sans-serif' }}>
+                {en.quickAddFile.quickAddFileOrUrl.fileLabel} <strong>{selectedFile.name}</strong> (
+                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
               </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                <Button
-                  variant='outlined'
-                  onClick={() => {
-                    setOpenDialog(false);
-                    resetState();
-                  }}
-                >
-                  {en.quickAddFile.quickAddFileOrUrl.cancel}
-                </Button>
-                <Button
-                  variant='solid'
-                  color='primary'
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting
-                    ? en.quickAddFile.quickAddFileOrUrl.transcribing
-                    : en.quickAddFile.quickAddFileOrUrl.transcribe}
-                </Button>
-              </Box>
-            </Stack>
-          </DialogContent>
-        </ModalDialog>
-      </Modal>
-    </Sheet>
+            )}
+            {inputType === 'url' && (
+              <Typography sx={{ fontFamily: '"Spline Sans", "Noto Sans", sans-serif' }}>
+                {en.quickAddFile.quickAddFileOrUrl.urlLabel} <strong>{urlInput}</strong>
+              </Typography>
+            )}
+            <Typography sx={{ fontFamily: '"Spline Sans", "Noto Sans", sans-serif' }}>
+              {en.quickAddFile.quickAddFileOrUrl.selectLanguage}
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setOpenDialog(false);
+              resetState();
+            }}
+            sx={{
+              color: 'white',
+              borderColor: '#3d505c',
+              fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
+              '&:hover': {
+                borderColor: '#1994e6',
+                bgcolor: 'rgba(25, 148, 230, 0.1)'
+              }
+            }}
+          >
+            {en.quickAddFile.quickAddFileOrUrl.cancel}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            sx={{
+              bgcolor: '#1994e6',
+              color: 'white',
+              fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
+              '&:hover': {
+                bgcolor: '#1580cc'
+              },
+              '&:disabled': {
+                bgcolor: '#3d505c',
+                color: '#a0aab5'
+              }
+            }}
+          >
+            {isSubmitting
+              ? en.quickAddFile.quickAddFileOrUrl.transcribing
+              : en.quickAddFile.quickAddFileOrUrl.transcribe}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Paper>
   );
 };
 
