@@ -37,6 +37,18 @@ Devise.setup do |config|
   # :mongoid (bson_ext recommended) by default. Other ORMs may be
   # available as additional gems.
   require 'devise/orm/active_record'
+  
+  # ==> OmniAuth
+  # Google OAuth2 configuration
+  config.omniauth :google_oauth2, 
+                  ENV['GOOGLE_CLIENT_ID'],
+                  ENV['GOOGLE_CLIENT_SECRET'],
+                  scope: 'email,profile',
+                  info_fields: 'email,first_name,last_name,picture',
+                  image_aspect_ratio: 'square',
+                  image_size: 50,
+                  access_type: 'offline',
+                  prompt: 'consent'
 
   # ==> Configuration for any authentication mechanism
   # Configure which keys are used when authenticating a user. The default is

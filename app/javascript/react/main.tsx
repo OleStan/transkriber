@@ -6,14 +6,21 @@ import { Provider } from 'react-redux';
 import { store } from './app/store';
 import { RouterProvider } from 'react-router-dom';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Safely attempt to obtain the root element and render the app if successful
 const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('Root element not found');
+}
+
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <Provider store={store}>
       <NotificationProvider>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </NotificationProvider>
     </Provider>
   </React.StrictMode>

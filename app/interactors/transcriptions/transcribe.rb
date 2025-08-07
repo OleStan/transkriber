@@ -9,14 +9,27 @@ end
 class Transcriptions::Transcribe < ActiveInteractor::Base
   include AudioTranscriptionHelper
 
-  after_rollback :set_failed_status
+  after_perform :ensure_progress_completion, if: -> { context.success? }
+  after_rollback :handle_failure
 
   def perform
-    transcription.update(status: 'in_progress') # TODO: some kind of transaction
+    # Initialize progress at the beginning
+    transcription.update_progress(0, 'transcribing')
 
-    transcribe_audio
-    transcription.update(transcription: text_from_audio, transcription_json:, status: 'completed')
-    broadcast_transcription
+    # Try the transcription with error handling and progress reporting
+    begin
+      transcribe_audio
+      
+      # Post-processing after successful transcription
+      transcription.update_progress(80, 'post_processing')
+      transcription.update(transcription: text_from_audio, transcription_json:)
+      
+      # Final update and broadcast
+      transcription.update_progress(100, 'completed')
+      broadcast_transcription
+    rescue StandardError => e
+      context.fail!(error: e.message)
+    end
   end
 
   private
@@ -24,10 +37,23 @@ class Transcriptions::Transcribe < ActiveInteractor::Base
   delegate :transcription, :transcription_json, :language, to: :context
 
   def transcribe_audio
-    context.transcription_json = OpenAiWhisperService.call(transcription.audio.blob, 'verbose_json', language:)
-  rescue StandardError => e
-    Rails.logger.error("Error transcribing audio: #{e.message}")
-    context.fail!(error: e.message)
+    # Set up progress tracking callback
+    progress_callback = ->(progress) {
+      # Update every 10% to avoid too many updates
+      if progress % 10 == 0
+        # Scale progress to 10-70% range during transcription
+        scaled_progress = 10 + (progress * 0.6).to_i
+        transcription.update_progress(scaled_progress)
+      end
+    }
+    
+    # Call the service with progress tracking
+    context.transcription_json = OpenAiWhisperService.call(
+      transcription.audio.blob, 
+      'verbose_json', 
+      language: language, 
+      progress_callback: progress_callback
+    )
   end
 
   def broadcast_transcription
@@ -43,8 +69,15 @@ class Transcriptions::Transcribe < ActiveInteractor::Base
     transcription_json.map { |transcription| transcription['text'] }.join
   end
 
-  def set_failed_status
-    transcription.update_column(:status, 'failed')
+  def handle_failure
+    error_message = context.error || 'Transcription failed with unknown error'
+    transcription.record_error(error_message)
+    Rails.logger.error("Error transcribing audio: #{error_message}")
+  end
+  
+  # Ensure we always set to 100% if successful
+  def ensure_progress_completion
+    transcription.update_progress(100, 'completed') unless transcription.progress == 100
   end
 
   ## This code same as in Transcription show serializer move it to shared modules

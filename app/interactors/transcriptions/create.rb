@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Transcriptions::CreateContext < ActiveInteractor::Context::Base
-  attributes :audio, :url, :language
+  attributes :audio, :url, :language, :user, :account
   attributes :audio_transcription, :io, :filename
 
   validate :audio_or_url_present
@@ -45,18 +45,24 @@ class Transcriptions::Create < ActiveInteractor::Organizer::Base
   end
 
   def set_create_params
-    context.create_params = if context.url.present?
-                              { title: context.url, status: :uploading }
-                            else
-                              {
-                                audio: context.audio,
-                                title: File.basename(context.audio.original_filename, '.*'),
-                                duration: AudioProcessing::DurationCalculator.calculate(
-                                  context.audio.tempfile.respond_to?(:path) ? context.audio.tempfile.path : Tempfile.new.path
-                                ),
-                                status: :in_progress
-                              }
-                            end
+    base_params = if context.url.present?
+                    { title: context.url, status: :uploading }
+                  else
+                    {
+                      audio: context.audio,
+                      title: File.basename(context.audio.original_filename, '.*'),
+                      duration: AudioProcessing::DurationCalculator.calculate(
+                        context.audio.tempfile.respond_to?(:path) ? context.audio.tempfile.path : Tempfile.new.path
+                      ),
+                      status: :in_progress
+                    }
+                  end
+    
+    # Add user and account associations if they exist
+    base_params[:user] = context.user if context.user.present?
+    base_params[:account] = context.account if context.account.present?
+    
+    context.create_params = base_params
   end
 
   def transcribe_audio

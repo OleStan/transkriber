@@ -10,34 +10,74 @@ class OpenAiWhisperService < ApplicationService
   WAIT_DURATION = 5 # seconds
   DEFAULT_RESPONSE_FORMAT = 'text'
 
-  def initialize(blob, response_format = DEFAULT_RESPONSE_FORMAT, language = 'en')
+  def initialize(blob, response_format = DEFAULT_RESPONSE_FORMAT, language = 'en', progress_callback = nil)
+    super()
     @blob = blob
     @response_format = response_format
     @language = language
+    @progress_callback = progress_callback
   end
 
   def call
     raise OpenAiError, 'No audio blob provided to transcribe' unless @blob
+
+    # Report initial progress
+    report_progress(0) if @progress_callback
+
     result = nil
-    @blob.open(tmpdir: Rails.root.join('tmp')) do |file|
-      format = @blob.filename.extension_without_delimiter
-      response = check_and_process_file(file.path, format)
-      result = read_response(response)
+    begin
+      @blob.open(tmpdir: Rails.root.join('tmp')) do |file|
+        format = @blob.filename.extension_without_delimiter
+        response = check_and_process_file(file.path, format)
+        result = read_response(response)
+      end
+
+      # Report completion
+      report_progress(100) if @progress_callback
+      result
+    rescue StandardError => e
+      # Log error details
+      Rails.logger.error("[OpenAiWhisperService] Transcription failed: #{e.message}")
+      Rails.logger.error(e.backtrace.join("\n"))
+      
+      # Raise exception with detailed message
+      raise OpenAiError, "Failed to transcribe audio: #{e.message}"
     end
-    result
   end
 
   private
 
   def check_and_process_file(file_path, format)
-    return [audio_to_text(file_path, format, @response_format)] if File.size(file_path) <= CHUNK_SIZE
+    if File.size(file_path) <= CHUNK_SIZE
+      # Single file processing
+      report_progress(10) if @progress_callback
+      return [audio_to_text(file_path, format, @response_format)]
+    end
 
+    # Multi-chunk processing
     split_and_process(file_path, format)
   end
 
   def split_and_process(file_path, format)
+    # Report progress for splitting start
+    report_progress(5) if @progress_callback
+    
     segments = split_audio(file_path, format)
-    segments.map { |segment| audio_to_text(segment, format, @response_format) }
+    total_segments = segments.size
+    
+    # Process each segment with progress reporting
+    segments.map.with_index do |segment, index|
+      # Calculate and report progress (5-95% range)
+      progress = 5 + ((index.to_f / total_segments) * 90).to_i
+      report_progress(progress) if @progress_callback
+      
+      result = audio_to_text(segment, format, @response_format)
+      
+      # Clean up temp segment file after processing
+      FileUtils.rm_f(segment)
+      
+      result
+    end
   end
 
   def split_audio(file_path, format)
@@ -151,8 +191,24 @@ class OpenAiWhisperService < ApplicationService
   end
 
   def mocked_response
-    sleep 5
-    # MockedData::MOKED_OPENAI_WHISPER_RESPONSE
+    # Simulate real-world processing with progress updates
+    total_steps = 10
+    total_steps.times do |step|
+      progress = ((step.to_f / total_steps) * 100).to_i
+      report_progress(progress) if @progress_callback
+      sleep 0.5 # shorter sleep for better UX in development
+    end
+    
+    # Return mocked data
     MockedData.mocked_openai_whisper_response(100)
+  end
+  
+  # Report progress through callback
+  def report_progress(percentage)
+    return unless @progress_callback
+    
+    # Ensure percentage is within bounds
+    percentage = [[percentage.to_i, 0].max, 100].min
+    @progress_callback.call(percentage)
   end
 end

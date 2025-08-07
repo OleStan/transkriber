@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Transcriptions::DeleteContext < ActiveInteractor::Context::Base
-  attributes :id, :page
+  attributes :id, :page, :user, :account
   validates :id, presence: true
 end
 

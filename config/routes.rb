@@ -2,7 +2,10 @@ require 'sidekiq/web'
 
 Rails.application.routes.draw do
   resources :accounts
-  devise_for :users
+  devise_for :users, controllers: {
+    registrations: 'api/registrations',
+    omniauth_callbacks: 'users/omniauth_callbacks'
+  }
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   mount ActionCable.server => '/cable'
 
@@ -31,6 +34,10 @@ Rails.application.routes.draw do
       resources :users
     end
     resources :transcriptions, only: %i[index show create destroy]
+  end
+
+  namespace :api do
+    resource :session, only: [:create, :destroy, :show]
   end
 
 end
