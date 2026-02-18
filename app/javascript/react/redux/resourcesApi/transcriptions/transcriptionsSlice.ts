@@ -12,8 +12,27 @@ export const transcriptionsSlice = transcriberApi.injectEndpoints({
       query: (id: number) => `transcriptions/${id}`,
       transformResponse: (response: TranscriptionDetailsResponse) => toCamelCase(response),
     }),
-    getTranscriptions: builder.query<TranscriptionsResponse, number | null>({
-      query: (page: number | null) => `transcriptions${page ? `?page=${page}` : ''}`,
+    getTranscriptions: builder.query<TranscriptionsResponse, {
+      page?: number | null;
+      status?: string | null;
+      q?: string | null;
+      start_date?: string | null;
+      end_date?: string | null;
+      type?: string | null;
+    }>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        
+        if (params.page) queryParams.append('page', params.page.toString());
+        if (params.status) queryParams.append('status', params.status);
+        if (params.q) queryParams.append('q', params.q);
+        if (params.start_date) queryParams.append('start_date', params.start_date);
+        if (params.end_date) queryParams.append('end_date', params.end_date);
+        if (params.type) queryParams.append('type', params.type);
+        
+        const queryString = queryParams.toString();
+        return `transcriptions${queryString ? `?${queryString}` : ''}`;
+      },
       transformResponse: (response: TranscriptionsResponse) => toCamelCase(response),
       providesTags: (result) =>
         result?.transcriptions

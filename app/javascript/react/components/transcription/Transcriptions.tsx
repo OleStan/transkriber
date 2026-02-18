@@ -35,7 +35,50 @@ const Transcriptions = () => {
   const [dateAnchor, setDateAnchor] = useState<null | HTMLElement>(null);
   const [typeAnchor, setTypeAnchor] = useState<null | HTMLElement>(null);
 
-  const { data: transcriptions, error, isLoading } = useGetTranscriptionsQuery(currentPage);
+  // Format date for API
+  const formatDateForAPI = (dateFilter: string | null): { start_date: string | null; end_date: string | null } => {
+    if (!dateFilter) return { start_date: null, end_date: null };
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    switch (dateFilter) {
+      case 'today':
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return {
+          start_date: today.toISOString().split('T')[0],
+          end_date: tomorrow.toISOString().split('T')[0]
+        };
+      case 'week':
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return {
+          start_date: weekAgo.toISOString().split('T')[0],
+          end_date: null
+        };
+      case 'month':
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        return {
+          start_date: monthAgo.toISOString().split('T')[0],
+          end_date: null
+        };
+      default:
+        return { start_date: null, end_date: null };
+    }
+  };
+  
+  const dateRange = formatDateForAPI(dateFilter);
+  
+  const { data: transcriptions, error, isLoading, refetch } = useGetTranscriptionsQuery({
+    page: currentPage,
+    status: statusFilter,
+    q: searchQuery || null,
+    start_date: dateRange.start_date,
+    end_date: dateRange.end_date,
+    type: typeFilter
+  });
 
   const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
@@ -62,17 +105,20 @@ const Transcriptions = () => {
     );
     return () => subs.forEach((sub: any) => sub.unsubscribe());
   }, [records]);
-  const displayRecords = records
-    .map(tr => ({ ...tr, status: updates[tr.id]?.status || tr.status }))
-    .filter(tr => {
-      if (searchQuery && !tr.audioFilename?.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      if (statusFilter && tr.status !== statusFilter) {
-        return false;
-      }
-      return true;
-    });
+  
+  // Apply real-time status updates to the records
+  const displayRecords = records.map(tr => ({ 
+    ...tr, 
+    status: updates[tr.id]?.status || tr.status 
+  }));
+
+  const isFilteringOrSearching = Boolean(
+    (searchQuery && searchQuery.trim() !== '') ||
+    statusFilter ||
+    dateFilter ||
+    typeFilter
+  );
+  const isEmpty = Boolean(transcriptions?.transcriptions && transcriptions.transcriptions.length === 0);
 
 
 
@@ -95,7 +141,7 @@ const Transcriptions = () => {
       case 'status':
         setStatusAnchor(null);
         if (value !== undefined) setStatusFilter(value);
-        break;
+        break;ґ
       case 'date':
         setDateAnchor(null);
         if (value !== undefined) setDateFilter(value);
@@ -136,10 +182,17 @@ const Transcriptions = () => {
   }
 
   return (
-      <Box sx={{ px: { xs: 2, sm: 4, md: 8, lg: 12, xl: 20 }, py: { xs: 2, sm: 3, md: 5 } }}>
-        <Box sx={{ maxWidth: '960px', mx: 'auto' }}>
-          {/* Page Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: { xs: 1, sm: 2 }, mb: { xs: 2, sm: 3 } }}>
+    <Box
+      sx={{
+        minHeight: 'calc(100vh - 64px)',
+        bgcolor: '#111b22',
+        py: { xs: 3, sm: 4, md: 5 },
+        px: { xs: 2, sm: 3, md: 4 }
+      }}
+    >
+      <Box sx={{ maxWidth: '1400px', mx: 'auto' }}>
+        {/* Page Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
             <Typography 
               variant="h3" 
               sx={{ 
@@ -170,12 +223,155 @@ const Transcriptions = () => {
             </Button>
           </Box>
 
-          {transcriptions?.transcriptions && transcriptions.transcriptions.length === 0 ? (
-            <QuickAddFileOrUrl />
+          {isEmpty ? (
+            isFilteringOrSearching ? (
+              <>
+                {/* Search Bar */}
+                <Box sx={{ mb: 4 }}>
+                  <TextField
+                    fullWidth
+                    placeholder="Search files"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon sx={{ color: '#9db1be' }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: '#2b3840',
+                        borderRadius: '12px',
+                        height: '48px',
+                        '& fieldset': {
+                          border: 'none',
+                        },
+                        '&:hover fieldset': {
+                          border: 'none',
+                        },
+                        '&.Mui-focused fieldset': {
+                          border: 'none',
+                        },
+                      },
+                      '& .MuiOutlinedInput-input': {
+                        color: 'white',
+                        '&::placeholder': {
+                          color: '#9db1be',
+                          opacity: 1,
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+
+                {/* Filter Buttons */}
+                <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+                  <Button
+                    onClick={(e) => handleFilterClick(e, 'status')}
+                    endIcon={<ArrowDownIcon />}
+                    sx={{
+                      bgcolor: '#2b3840',
+                      color: 'white',
+                      borderRadius: '20px',
+                      px: 2,
+                      py: 1,
+                      fontSize: '14px',
+                      fontWeight: 'medium',
+                      '&:hover': {
+                        bgcolor: '#3d505c'
+                      }
+                    }}
+                  >
+                    Status
+                  </Button>
+                  <Menu
+                    anchorEl={statusAnchor}
+                    open={Boolean(statusAnchor)}
+                    onClose={() => handleFilterClose('status')}
+                  >
+                    <MenuItem onClick={() => handleFilterClose('status', null)}>All</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('status', 'completed')}>Completed</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('status', 'processing')}>Processing</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('status', 'failed')}>Failed</MenuItem>
+                  </Menu>
+
+                  <Button
+                    onClick={(e) => handleFilterClick(e, 'date')}
+                    endIcon={<ArrowDownIcon />}
+                    sx={{
+                      bgcolor: '#2b3840',
+                      color: 'white',
+                      borderRadius: '20px',
+                      px: 2,
+                      py: 1,
+                      fontSize: '14px',
+                      fontWeight: 'medium',
+                      '&:hover': {
+                        bgcolor: '#3d505c'
+                      }
+                    }}
+                  >
+                    Date
+                  </Button>
+                  <Menu
+                    anchorEl={dateAnchor}
+                    open={Boolean(dateAnchor)}
+                    onClose={() => handleFilterClose('date')}
+                  >
+                    <MenuItem onClick={() => handleFilterClose('date', null)}>All</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('date', 'today')}>Today</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('date', 'week')}>This Week</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('date', 'month')}>This Month</MenuItem>
+                  </Menu>
+
+                  <Button
+                    onClick={(e) => handleFilterClick(e, 'type')}
+                    endIcon={<ArrowDownIcon />}
+                    sx={{
+                      bgcolor: '#2b3840',
+                      color: 'white',
+                      borderRadius: '20px',
+                      px: 2,
+                      py: 1,
+                      fontSize: '14px',
+                      fontWeight: 'medium',
+                      '&:hover': {
+                        bgcolor: '#3d505c'
+                      }
+                    }}
+                  >
+                    Type
+                  </Button>
+                  <Menu
+                    anchorEl={typeAnchor}
+                    open={Boolean(typeAnchor)}
+                    onClose={() => handleFilterClose('type')}
+                  >
+                    <MenuItem onClick={() => handleFilterClose('type', null)}>All</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('type', 'audio')}>Audio</MenuItem>
+                    <MenuItem onClick={() => handleFilterClose('type', 'video')}>Video</MenuItem>
+                  </Menu>
+                </Box>
+
+                {/* Empty State */}
+                <Box sx={{ textAlign: 'center', mt: 8 }}>
+                  <Typography variant="h6" sx={{ color: '#9db1be', mb: 1 }}>
+                    No results found
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#9db1be' }}>
+                    Try adjusting your filters or search.
+                  </Typography>
+                </Box>
+              </>
+            ) : (
+              <QuickAddFileOrUrl />
+            )
           ) : (
             <>
               {/* Search Bar */}
-              <Box sx={{ px: { xs: 1, sm: 2 }, py: { xs: 2, sm: 3 } }}>
+              <Box sx={{ mb: 4 }}>
                 <TextField
                   fullWidth
                   placeholder="Search files"
@@ -215,7 +411,7 @@ const Transcriptions = () => {
               </Box>
 
               {/* Filter Buttons */}
-              <Box sx={{ display: 'flex', gap: 1.5, p: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
                 <Button
                   onClick={(e) => handleFilterClick(e, 'status')}
                   endIcon={<ArrowDownIcon />}
@@ -304,7 +500,7 @@ const Transcriptions = () => {
               </Box>
 
               {/* Table */}
-              <Box sx={{ px: { xs: 1, sm: 2 }, py: { xs: 2, sm: 3 } }}>
+              <Box sx={{ mb: 4 }}>
                 <StyledTranscriptionsTable transcriptions={displayRecords} />
               </Box>
 

@@ -57,7 +57,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_08_065559) do
     t.string "status", default: "pending"
     t.integer "duration"
     t.bigint "account_id"
-    t.bigint "user_id", null: false
+    t.bigint "user_id"
     t.integer "progress", default: 0
     t.text "error_message"
     t.index ["account_id"], name: "index_transcriptions_on_account_id"

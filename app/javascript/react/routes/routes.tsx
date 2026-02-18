@@ -7,6 +7,7 @@ import { loader as transcriptionLoader } from '../components/transcription/trans
 import Login from '../components/auth/Login';
 import Signup from '../components/auth/Signup';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+import Settings from '../components/settings/Settings';
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
           { path: '/', element: <Home /> },
           { path: '/home', element: <Home /> },
           { path: '/transcriptions', element: <Transcriptions /> },
+          { path: '/settings', element: <Settings /> },
           {
             path: 'transcriptions/:id',
             element: <TranscriptionShow />,

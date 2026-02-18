@@ -496,6 +496,7 @@ PLATFORMS
   arm64-darwin-21
   arm64-darwin-23
   arm64-darwin-24
+  arm64-darwin-25
 
 DEPENDENCIES
   active_model_serializers
@@ -538,7 +539,7 @@ DEPENDENCIES
   webdrivers
 
 RUBY VERSION
-   ruby 3.3.6p108
+   ruby 3.3.9p170
 
 BUNDLED WITH
    2.4.3

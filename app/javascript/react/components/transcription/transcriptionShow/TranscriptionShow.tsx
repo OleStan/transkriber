@@ -435,11 +435,12 @@ const TranscriptionShow = () => {
             !transcriptionState.cancelled && !transcriptionState.error && transcriptionSegments && transcriptionSegments.length > 0 && (
               <Box>
                 {transcriptionSegments.map((segment) => (
-                  <Box key={segment.id} sx={{ p: 4 }}>
+                  <Box key={segment.id} sx={{ px: 4 }}>
                     <Box 
                       sx={{ 
                         display: 'flex', 
                         justifyContent: 'space-between', 
+                        padding: '0',
                         gap: 6, 
                         py: 2,
                         '&:hover .timestamp': {

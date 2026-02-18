@@ -20,6 +20,7 @@ Rails.application.routes.draw do
   controller :pages do
     get '/', to: 'pages#root'
     get '/home', to: 'pages#root'
+    get '/settings', to: 'pages#root'
     get  'transcriptions', to: 'pages#root'
     get  'transcriptions/:id', to: 'pages#root'
     get  'transcriptions/', to: 'pages#root'

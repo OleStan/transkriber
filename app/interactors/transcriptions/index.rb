@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Transcriptions::IndexContext < ActiveInteractor::Context::Base
-  attributes :page, :user, :account, :status, :search, :start_date, :end_date
+  attributes :page, :user, :account, :status, :search, :start_date, :end_date, :file_type
 
   attributes :data, :transcriptions
 end
@@ -27,7 +27,8 @@ class Transcriptions::Index < ActiveInteractor::Base
         status: context.status,
         search: context.search,
         start_date: parse_date(context.start_date),
-        end_date: parse_date(context.end_date)
+        end_date: parse_date(context.end_date),
+        file_type: context.file_type
       )
       .page(page)
   end

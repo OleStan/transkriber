@@ -13,7 +13,8 @@ class Ajax::TranscriptionsController < ApplicationController
       status: params[:status],
       search: params[:q],
       start_date: params[:start_date],
-      end_date: params[:end_date]
+      end_date: params[:end_date],
+      file_type: params[:type]
     )
 
     if result.success?
