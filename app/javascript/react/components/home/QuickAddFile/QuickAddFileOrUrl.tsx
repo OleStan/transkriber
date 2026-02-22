@@ -349,6 +349,7 @@ const QuickAddFileOrUrl = () => {
             <Typography sx={{ fontFamily: '"Spline Sans", "Noto Sans", sans-serif' }}>
               {en.quickAddFile.quickAddFileOrUrl.selectLanguage}
             </Typography>
+            <LanguageSelector language={language} setLanguage={setLanguage} />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
