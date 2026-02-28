@@ -33,8 +33,8 @@ async function testSignup() {
   console.log('Testing signup...');
   const testUser = {
     email: `test${Date.now()}@example.com`,
-    password: 'password123',
-    password_confirmation: 'password123',
+    password: '<PASSWORD>',
+    password_confirmation: '<PASSWORD>',
     account_attributes: {
       name: 'Test Account'
     }
