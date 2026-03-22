@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import QuickAddFileOrUrl from './QuickAddFile/QuickAddFileOrUrl';
+import SidebarRecentActivity from './SidebarRecentActivity';
 import Box from '@mui/joy/Box';
 import Typography from '@mui/joy/Typography';
 import Stack from '@mui/joy/Stack';
@@ -54,9 +55,9 @@ const Home = () => {
       <Box sx={{ maxWidth: '1400px', mx: 'auto' }}>
         <Stack spacing={4} sx={{ flexGrow: 1 }} direction={{ xs: 'column', md: 'row' }}>
           <Box sx={{ flex: 1 }}>
-            <Typography 
-              level="h4" 
-              sx={{ 
+            <Typography
+              level="h4"
+              sx={{
                 mb: 3,
                 color: 'white',
                 fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
@@ -67,9 +68,9 @@ const Home = () => {
             </Typography>
             <QuickAddFileOrUrl />
             <Box sx={{ mt: 5 }}>
-              <Typography 
-                level="h4" 
-                sx={{ 
+              <Typography
+                level="h4"
+                sx={{
                   mb: 3,
                   color: 'white',
                   fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
@@ -79,11 +80,11 @@ const Home = () => {
                 Recent Transcriptions
               </Typography>
           {isLoading ? (
-            <Box 
-              sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
                 minHeight: 200,
                 bgcolor: '#141b1f',
                 border: '1px solid #3d505c',
@@ -93,9 +94,9 @@ const Home = () => {
               <CircularProgress sx={{ color: '#1994e6' }} />
             </Box>
           ) : error ? (
-            <Box 
-              sx={{ 
-                p: 3, 
+            <Box
+              sx={{
+                p: 3,
                 bgcolor: '#141b1f',
                 border: '1px solid #3d505c',
                 borderRadius: '12px',
@@ -110,6 +111,9 @@ const Home = () => {
             <StyledTranscriptionsTable transcriptions={displayTranscriptions} />
           )}
             </Box>
+          </Box>
+          <Box sx={{ width: { xs: '100%', md: 'auto' } }}>
+            <SidebarRecentActivity />
           </Box>
         </Stack>
       </Box>
