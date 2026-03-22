@@ -56,7 +56,10 @@ const EXPORT_FORMATS: { label: string; format: 'txt' | 'srt' | 'vtt' }[] = [
 const handleExport = (id: number, format: 'txt' | 'srt' | 'vtt') => {
   const link = document.createElement('a');
   link.href = `/ajax/transcriptions/${id}/export?format=${format}`;
+  link.setAttribute('download', '');
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
 };
 
 const StyledTranscriptionsTable: React.FC<StyledTranscriptionsTableProps> = ({ transcriptions }) => {

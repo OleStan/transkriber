@@ -53,7 +53,8 @@ class Ajax::TranscriptionsController < ApplicationController
 
     content = Transcriptions::Exporter.call(@transcription, format)
     filename = "#{(@transcription.title || 'transcription').parameterize}.#{format}"
-    send_data content, filename: filename, type: 'text/plain; charset=utf-8', disposition: 'attachment'
+    mime_type = format == 'vtt' ? 'text/vtt; charset=utf-8' : 'text/plain; charset=utf-8'
+    send_data content, filename: filename, type: mime_type, disposition: 'attachment'
   end
 
   def destroy

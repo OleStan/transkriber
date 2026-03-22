@@ -9,10 +9,9 @@ import useActionCable, { TranscriptionMessage } from '../../../hooks/useActionCa
 import AdjustSegmentSizeSlider from './AdjustSegmentSizeSlider';
 import useAudioStore from '../../../stores/useAudioStore';
 import { Box, LinearProgress, Typography, Stack, Alert, Button, IconButton, CircularProgress, Snackbar, Menu, MenuItem, ListItemText } from '@mui/material';
-import { 
+import {
   PlayArrow as PlayArrowIcon,
   Cancel as CancelIcon,
-  Info as InfoIcon,
   Error as ErrorIcon,
   Download as DownloadIcon,
   ContentCopy as ContentCopyIcon
@@ -163,7 +162,10 @@ const TranscriptionShow = () => {
   const handleExport = (format: 'txt' | 'srt' | 'vtt') => {
     const link = document.createElement('a');
     link.href = `/ajax/transcriptions/${id}/export?format=${format}`;
+    link.setAttribute('download', '');
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     handleDownloadMenuClose();
   };
 
