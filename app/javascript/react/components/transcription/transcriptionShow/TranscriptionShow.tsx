@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useLoaderData } from 'react-router-dom';
-import { useGetTranscriptionQuery } from '../../../redux/resourcesApi/transcriptions/transcriptionsSlice';
+import { useGetTranscriptionQuery, useUpdateTranscriptionMutation } from '../../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 import AudioPlayer from '../../player/AudioPlayer';
 import useAdjustableTranscription from '../../../hooks/useAdjustableTranscription';
 import TranscriptionSegmentsSkeleton from './TranscriptionSegmentsSkeleton';
@@ -8,13 +8,15 @@ import TranscriptionShowSkeleton from './TranscriptionShowSkeleton';
 import useActionCable, { TranscriptionMessage } from '../../../hooks/useActionCable';
 import AdjustSegmentSizeSlider from './AdjustSegmentSizeSlider';
 import useAudioStore from '../../../stores/useAudioStore';
-import { Box, LinearProgress, Typography, Stack, Alert, Button, IconButton, CircularProgress, Snackbar, Menu, MenuItem, ListItemText } from '@mui/material';
+import TranscriptionEditor from './TranscriptionEditor';
+import { Box, LinearProgress, Typography, Stack, Alert, Button, IconButton, CircularProgress, Snackbar, Menu, MenuItem, ListItemText, Chip } from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
   Cancel as CancelIcon,
   Error as ErrorIcon,
   Download as DownloadIcon,
-  ContentCopy as ContentCopyIcon
+  ContentCopy as ContentCopyIcon,
+  Edit as EditIcon,
 } from '@mui/icons-material';
 
 import { LoaderFunctionArgs } from 'react-router-dom';
@@ -81,9 +83,18 @@ const TranscriptionShow = () => {
   const [hoveredTimestamp, setHoveredTimestamp] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [downloadMenuAnchor, setDownloadMenuAnchor] = useState<null | HTMLElement>(null);
-  
+
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedSegments, setEditedSegments] = useState<ITranscriptionSegment[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   // Store hooks
   const setSeek = useAudioStore((state) => state.setSeek);
+
+  // Edit mutation
+  const [updateTranscription] = useUpdateTranscriptionMutation();
   
   // Use our enhanced ActionCable hook
   const { latestMessage, messages, cancelTranscription } = useActionCable('TranscriptionChannel', id);
@@ -94,6 +105,77 @@ const TranscriptionShow = () => {
       cancelTranscription();
     }
   }, [cancelTranscription]);
+
+  // Edit mode handlers
+  const handleEnterEdit = useCallback(() => {
+    const segs = Array.isArray(transcription?.transcriptions)
+      ? transcription.transcriptions
+      : [];
+    setEditedSegments(segs as ITranscriptionSegment[]);
+    setIsEditing(true);
+    setHasUnsavedChanges(false);
+  }, [transcription]);
+
+  const handleDiscardEdit = useCallback(() => {
+    if (hasUnsavedChanges && !window.confirm('Discard unsaved changes?')) return;
+    setIsEditing(false);
+    setHasUnsavedChanges(false);
+  }, [hasUnsavedChanges]);
+
+  const handleSave = useCallback(async () => {
+    setIsSaving(true);
+    try {
+      const transcriptionText = editedSegments.map(s => s.text).join(' ');
+      const transcriptionJson = {
+        segments: editedSegments.map(s => ({
+          id: (s as any).id,
+          text: s.text,
+          start: s.start,
+          end: s.end,
+        })),
+      };
+      await updateTranscription({
+        id: Number(id),
+        transcription: transcriptionText,
+        transcriptionJson,
+      }).unwrap();
+      setIsEditing(false);
+      setHasUnsavedChanges(false);
+    } catch {
+      // error handled server-side; UI will show existing error state
+    } finally {
+      setIsSaving(false);
+    }
+  }, [editedSegments, id, updateTranscription]);
+
+  const handleSegmentsChange = useCallback((segments: ITranscriptionSegment[]) => {
+    setEditedSegments(segments);
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Unsaved changes guard on navigation/close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // Ctrl+Enter to save when editing
+  useEffect(() => {
+    if (!isEditing) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        handleSave();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isEditing, handleSave]);
 
   useEffect(() => {
     if (!latestMessage) return;
@@ -250,6 +332,82 @@ const TranscriptionShow = () => {
           {/* Action Buttons */}
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <Box sx={{ display: 'flex', flex: 1, gap: 3, maxWidth: '480px', flexDirection: 'column', px: 4, py: 3 }}>
+              {!isEditing ? (
+                <Button
+                  onClick={handleEnterEdit}
+                  disabled={!Array.isArray(transcription?.transcriptions) || transcription.transcriptions.length === 0}
+                  startIcon={<EditIcon />}
+                  sx={{
+                    minWidth: '84px',
+                    height: '40px',
+                    px: 4,
+                    bgcolor: '#243947',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    borderRadius: '20px',
+                    textTransform: 'none',
+                    '&:hover': {
+                      bgcolor: '#2d4350'
+                    },
+                    '&:disabled': {
+                      bgcolor: '#1a2832',
+                      color: '#93b3c8'
+                    }
+                  }}
+                >
+                  Edit
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    startIcon={isSaving ? <CircularProgress size={16} sx={{ color: 'white' }} /> : undefined}
+                    sx={{
+                      minWidth: '84px',
+                      height: '40px',
+                      px: 4,
+                      bgcolor: '#1993e5',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      borderRadius: '20px',
+                      textTransform: 'none',
+                      '&:hover': {
+                        bgcolor: '#1478c7'
+                      },
+                      '&:disabled': {
+                        bgcolor: '#1a2832',
+                        color: '#93b3c8'
+                      }
+                    }}
+                  >
+                    {isSaving ? 'Saving...' : 'Save changes'}
+                  </Button>
+                  <Button
+                    onClick={handleDiscardEdit}
+                    disabled={isSaving}
+                    variant="text"
+                    sx={{
+                      minWidth: '84px',
+                      height: '40px',
+                      px: 4,
+                      color: '#93b3c8',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      borderRadius: '20px',
+                      textTransform: 'none',
+                      '&:hover': {
+                        bgcolor: '#1a2832',
+                        color: 'white'
+                      }
+                    }}
+                  >
+                    Discard
+                  </Button>
+                </>
+              )}
               <Button
                 onClick={handleCopy}
                 disabled={!transcriptWithTimestamps}
@@ -420,18 +578,25 @@ const TranscriptionShow = () => {
           </Box>
           
           {/* Transcription Title */}
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              fontWeight: 'bold', 
-              px: 4, 
-              pb: 3, 
-              pt: 5,
-              color: 'white'
-            }}
-          >
-            Transcription
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 4, pb: 3, pt: 5 }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 'bold',
+                color: 'white'
+              }}
+            >
+              Transcription
+            </Typography>
+            {isEditing && (
+              <Chip
+                label="Editing"
+                color="warning"
+                size="small"
+                sx={{ fontWeight: 'bold' }}
+              />
+            )}
+          </Box>
           
           {/* Progress State */}
           {showInProgress && !transcriptionState.cancelled && !transcriptionState.error ? (
@@ -486,69 +651,76 @@ const TranscriptionShow = () => {
               <TranscriptionSegmentsSkeleton />
             </Box>
           ) : (
-            /* Transcription Segments */
+            /* Transcription Segments — read-only or editor */
             !transcriptionState.cancelled && !transcriptionState.error && transcriptionSegments && transcriptionSegments.length > 0 && (
-              <Box>
-                {transcriptionSegments.map((segment) => (
-                  <Box key={segment.id} sx={{ px: 4 }}>
-                    <Box 
-                      sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        padding: '0',
-                        gap: 6, 
-                        py: 2,
-                        '&:hover .timestamp': {
-                          '& .play-icon': {
-                            opacity: 1
-                          }
-                        }
-                      }}
-                      onMouseEnter={() => setHoveredTimestamp(String(segment.id))}
-                      onMouseLeave={() => setHoveredTimestamp(null)}
-                    >
-                      <Box 
-                        className="timestamp"
-                        sx={{ 
-                          color: '#93b3c8', 
-                          fontSize: '14px',
-                          cursor: 'pointer',
+              isEditing ? (
+                <TranscriptionEditor
+                  segments={editedSegments}
+                  onChange={handleSegmentsChange}
+                />
+              ) : (
+                <Box>
+                  {transcriptionSegments.map((segment) => (
+                    <Box key={segment.id} sx={{ px: 4 }}>
+                      <Box
+                        sx={{
                           display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          minWidth: '80px'
+                          justifyContent: 'space-between',
+                          padding: '0',
+                          gap: 6,
+                          py: 2,
+                          '&:hover .timestamp': {
+                            '& .play-icon': {
+                              opacity: 1
+                            }
+                          }
                         }}
-                        onClick={() => handleTimestampClick(segment.startOfChunk)}
+                        onMouseEnter={() => setHoveredTimestamp(String(segment.id))}
+                        onMouseLeave={() => setHoveredTimestamp(null)}
                       >
-                        <Typography sx={{ fontSize: '14px', color: '#93b3c8' }}>
-                          {segment.timestampOfChunk}
-                        </Typography>
-                        <PlayArrowIcon 
-                          className="play-icon"
-                          sx={{ 
-                            fontSize: '16px', 
+                        <Box
+                          className="timestamp"
+                          sx={{
                             color: '#93b3c8',
-                            opacity: hoveredTimestamp === String(segment.id) ? 1 : 0,
-                            transition: 'opacity 0.2s'
-                          }} 
-                        />
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            minWidth: '80px'
+                          }}
+                          onClick={() => handleTimestampClick(segment.startOfChunk)}
+                        >
+                          <Typography sx={{ fontSize: '14px', color: '#93b3c8' }}>
+                            {segment.timestampOfChunk}
+                          </Typography>
+                          <PlayArrowIcon
+                            className="play-icon"
+                            sx={{
+                              fontSize: '16px',
+                              color: '#93b3c8',
+                              opacity: hoveredTimestamp === String(segment.id) ? 1 : 0,
+                              transition: 'opacity 0.2s'
+                            }}
+                          />
+                        </Box>
+                        <Typography
+                          sx={{
+                            color: 'white',
+                            fontSize: '14px',
+                            textAlign: 'left',
+                            flex: 1
+                          }}
+                        >
+                          {segment.segments.map((s, index) => (
+                            <span key={s.id || index}>{s.text}</span>
+                          ))}
+                        </Typography>
                       </Box>
-                      <Typography 
-                        sx={{ 
-                          color: 'white', 
-                          fontSize: '14px', 
-                          textAlign: 'left',
-                          flex: 1
-                        }}
-                      >
-                        {segment.segments.map((s, index) => (
-                          <span key={s.id || index}>{s.text}</span>
-                        ))}
-                      </Typography>
                     </Box>
-                  </Box>
-                ))}
-              </Box>
+                  ))}
+                </Box>
+              )
             )
           )}
           

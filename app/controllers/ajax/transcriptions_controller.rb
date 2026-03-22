@@ -2,8 +2,8 @@
 
 class Ajax::TranscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_transcription, only: %i[show destroy export]
-  before_action :verify_transcription_ownership, only: %i[show destroy export]
+  before_action :set_transcription, only: %i[show destroy export update]
+  before_action :verify_transcription_ownership, only: %i[show destroy export update]
 
   def index
     result = Transcriptions::Index.perform(
@@ -57,6 +57,21 @@ class Ajax::TranscriptionsController < ApplicationController
     send_data content, filename: filename, type: mime_type, disposition: 'attachment'
   end
 
+  def update
+    result = Transcriptions::Update.perform(
+      id: @transcription.id,
+      user: current_user,
+      transcription_text: transcription_update_params[:transcription],
+      transcription_json: transcription_update_params[:transcription_json]
+    )
+
+    if result.success?
+      render json: { id: result.transcription.id }, status: :ok
+    else
+      render json: { errors: result.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     result = Transcriptions::Delete.perform(
       id: @transcription.id, 
@@ -90,5 +105,9 @@ class Ajax::TranscriptionsController < ApplicationController
     params
       .require(:audio_transcription)
       .permit(:audio, :url, :language)
+  end
+
+  def transcription_update_params
+    params.require(:transcription).permit(:transcription, transcription_json: {})
   end
 end

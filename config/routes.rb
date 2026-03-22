@@ -34,7 +34,7 @@ Rails.application.routes.draw do
     resources :accounts do
       resources :users
     end
-    resources :transcriptions, only: %i[index show create destroy] do
+    resources :transcriptions, only: %i[index show create destroy update] do
       get :export, on: :member
     end
     resource :user, only: [] do

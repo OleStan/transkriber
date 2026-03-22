@@ -72,6 +72,16 @@ export const transcriptionsSlice = transcriberApi.injectEndpoints({
         { type: 'Transcription' as const, id: 'LIST' },
       ],
     }),
+    updateTranscription: builder.mutation<{ id: number }, { id: number; transcription: string; transcriptionJson: any }>({
+      query: ({ id, transcription, transcriptionJson }) => ({
+        url: `transcriptions/${id}`,
+        method: 'PATCH',
+        body: {
+          transcription: { transcription, transcription_json: transcriptionJson },
+        },
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Transcription' as const, id }],
+    }),
   }),
 });
 
@@ -81,4 +91,5 @@ export const {
   useGetTranscriptionsQuery,
   useCreateTranscriptionMutation,
   useDeleteTranscriptionMutation,
+  useUpdateTranscriptionMutation,
 } = transcriptionsSlice;
