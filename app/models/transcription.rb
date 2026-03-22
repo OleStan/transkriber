@@ -101,7 +101,7 @@ class Transcription < ApplicationRecord
   end
 
   def transcribe_audio
-    OpenAiWhisperService.call(audio.blob)
+    Transcriptions::ProviderFactory.for.call(audio.blob, 'text')
   end
 
   # Update progress and broadcast to WebSocket

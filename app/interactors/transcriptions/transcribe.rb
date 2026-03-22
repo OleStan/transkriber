@@ -47,11 +47,12 @@ class Transcriptions::Transcribe < ActiveInteractor::Base
       end
     }
     
-    # Call the service with progress tracking
-    context.transcription_json = OpenAiWhisperService.call(
-      transcription.audio.blob, 
-      'verbose_json', 
-      language: language, 
+    # Call the configured provider with progress tracking
+    provider = Transcriptions::ProviderFactory.for
+    context.transcription_json = provider.call(
+      transcription.audio.blob,
+      'verbose_json',
+      language: language,
       progress_callback: progress_callback
     )
   end

@@ -7,3 +7,10 @@ GOOGLE_CLIENT_SECRET: ""
 
 # Host for audio URL generation (used in serializers)
 HOST: "http://localhost:3000"
+
+# Transcription provider: 'openai' or 'google' (default: openai)
+TRANSCRIPTION_PROVIDER: "openai"
+
+# Google Cloud credentials (required when TRANSCRIPTION_PROVIDER=google)
+GOOGLE_APPLICATION_CREDENTIALS: ""
+GOOGLE_CLOUD_PROJECT_ID: ""
