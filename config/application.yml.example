@@ -4,3 +4,6 @@ OPENAI_ORGANIZATION_ID: ""
 # Google OAuth credentials
 GOOGLE_CLIENT_ID: ""
 GOOGLE_CLIENT_SECRET: ""
+
+# Host for audio URL generation (used in serializers)
+HOST: "http://localhost:3000"

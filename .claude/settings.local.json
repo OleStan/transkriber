@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(bundle install:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|STUB\\\\|XXX\\\\|HACK\\\\|INCOMPLETE\" /Users/olesstankevych/ole/study/transcriber/app --include=*.rb --include=*.tsx --include=*.ts)"
     ],
     "deny": [],
     "ask": []
