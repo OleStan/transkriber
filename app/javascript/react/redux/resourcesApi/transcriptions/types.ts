@@ -3,6 +3,12 @@ export interface ErrorResponse {
   errorMessage: string;
 }
 
+export interface SummaryData {
+  overview: string;
+  keyPoints: string[];
+  actionItems: string[];
+}
+
 export interface Transcription {
   id: number;
   audioFilename: string | null;
@@ -28,6 +34,7 @@ export interface TranscriptionSegment extends Segment {
 export interface TranscriptionDetails extends Transcription {
   transcriptionSegments: TranscriptionSegment[];
   audioTranscriptionPath: string;
+  summary?: SummaryData | null;
 }
 
 export interface TranscriptionsResponse {

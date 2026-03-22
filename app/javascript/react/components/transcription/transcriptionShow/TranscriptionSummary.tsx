@@ -10,25 +10,28 @@ import { useSummarizeTranscriptionMutation } from '../../../redux/resourcesApi/t
 
 export interface SummaryData {
   overview: string;
-  key_points: string[];
-  action_items: string[];
+  keyPoints: string[];
+  actionItems: string[];
 }
 
 interface TranscriptionSummaryProps {
   transcriptionId: number;
   summary: SummaryData | null;
   transcriptionText: string | null;
+  onGenerateStart?: () => void;
 }
 
 const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
   transcriptionId,
   summary,
   transcriptionText,
+  onGenerateStart,
 }) => {
   const [isExpanded, setIsExpanded] = useState(!!summary);
   const [isGenerating, setIsGenerating] = useState(false);
   const [localSummary, setLocalSummary] = useState<SummaryData | null>(summary);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [triggerSummarize] = useSummarizeTranscriptionMutation();
 
@@ -42,25 +45,28 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
   }, [summary]);
 
   const handleGenerate = useCallback(async () => {
+    setError(null);
     setIsGenerating(true);
     setIsExpanded(true);
+    onGenerateStart?.();
     try {
       await triggerSummarize(transcriptionId).unwrap();
       // Worker runs async; actual update comes via WebSocket → parent updates summary prop
     } catch {
+      setError('Failed to generate summary. Please try again.');
       setIsGenerating(false);
     }
-  }, [transcriptionId, triggerSummarize]);
+  }, [transcriptionId, triggerSummarize, onGenerateStart]);
 
   const handleCopy = useCallback(async () => {
     if (!localSummary) return;
     const md = [
       `## Overview\n${localSummary.overview}`,
-      localSummary.key_points.length
-        ? `## Key Points\n${localSummary.key_points.map((p) => `• ${p}`).join('\n')}`
+      localSummary.keyPoints.length
+        ? `## Key Points\n${localSummary.keyPoints.map((p) => `• ${p}`).join('\n')}`
         : '',
-      localSummary.action_items.length
-        ? `## Action Items\n${localSummary.action_items.map((a) => `☐ ${a}`).join('\n')}`
+      localSummary.actionItems.length
+        ? `## Action Items\n${localSummary.actionItems.map((a) => `☐ ${a}`).join('\n')}`
         : '',
     ]
       .filter(Boolean)
@@ -180,7 +186,7 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
                 </Typography>
 
                 {/* Key Points */}
-                {localSummary.key_points?.length > 0 && (
+                {localSummary.keyPoints?.length > 0 && (
                   <Box sx={{ mb: 2.5 }}>
                     <Typography
                       sx={{
@@ -194,7 +200,7 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
                     >
                       Key Points
                     </Typography>
-                    {localSummary.key_points.map((point, i) => (
+                    {localSummary.keyPoints.map((point, i) => (
                       <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: 0.75 }}>
                         <Typography
                           sx={{ color: '#1993e5', fontSize: '14px', flexShrink: 0, mt: '1px' }}
@@ -210,7 +216,7 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
                 )}
 
                 {/* Action Items */}
-                {localSummary.action_items?.length > 0 && (
+                {localSummary.actionItems?.length > 0 && (
                   <Box>
                     <Typography
                       sx={{
@@ -224,7 +230,7 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
                     >
                       Action Items
                     </Typography>
-                    {localSummary.action_items.map((item, i) => (
+                    {localSummary.actionItems.map((item, i) => (
                       <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: 0.75 }}>
                         <Typography
                           sx={{ color: '#93b3c8', fontSize: '14px', flexShrink: 0, mt: '1px' }}
@@ -242,6 +248,9 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
             ) : (
               /* Empty state */
               <Box sx={{ pt: 2, textAlign: 'center', py: 3 }}>
+                {error && (
+                  <Typography sx={{ color: '#ff6b6b', fontSize: '13px', mb: 1 }}>{error}</Typography>
+                )}
                 <Typography sx={{ color: '#4a6070', fontSize: '14px' }}>
                   Click "Generate" to create an AI summary of this transcription.
                 </Typography>

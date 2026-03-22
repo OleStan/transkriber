@@ -74,7 +74,10 @@ const EXPORT_FORMATS: { label: string; format: 'txt' | 'srt' | 'vtt' }[] = [
 
 const TranscriptionShow = () => {
   const { id } = useLoaderData() as LoaderData;
-  const { data: transcription, isLoading } = useGetTranscriptionQuery(Number(id)) as { data: TranscriptionDetailsResponse | undefined, isLoading: boolean };
+  const [summaryPollingInterval, setSummaryPollingInterval] = useState(0);
+  const { data: transcription, isLoading } = useGetTranscriptionQuery(Number(id), {
+    pollingInterval: summaryPollingInterval,
+  }) as { data: TranscriptionDetailsResponse | undefined, isLoading: boolean };
   const [transcriptionState, setTranscriptionState] = useState({
     text: '',
     isCompleted: false,
@@ -191,7 +194,17 @@ const TranscriptionShow = () => {
     if (!latestMessage) return;
 
     if (latestMessage.summary) {
-      setCurrentSummary(latestMessage.summary as SummaryData);
+      const s = latestMessage.summary as any;
+      setCurrentSummary({
+        overview: s.overview,
+        keyPoints: s.key_points ?? s.keyPoints ?? [],
+        actionItems: s.action_items ?? s.actionItems ?? [],
+      });
+      setSummaryPollingInterval(0); // stop polling — summary arrived via WebSocket
+    }
+
+    if (latestMessage.summary_error) {
+      setSummaryPollingInterval(0); // stop polling on permanent failure
     }
 
     setTranscriptionState((prevState) => ({
@@ -204,10 +217,11 @@ const TranscriptionShow = () => {
     }));
   }, [latestMessage]);
 
-  // Sync summary from fetched transcription data
+  // Sync summary from fetched transcription data (also used by polling)
   useEffect(() => {
-    if (transcription?.summary !== undefined) {
-      setCurrentSummary(transcription.summary ?? null);
+    if (transcription?.summary) {
+      setCurrentSummary(transcription.summary);
+      setSummaryPollingInterval(0); // stop polling — summary arrived via REST
     }
   }, [transcription?.summary]);
 
@@ -631,6 +645,7 @@ const TranscriptionShow = () => {
                   ? transcription.transcriptions.map((s) => s.text).join(' ')
                   : null
               }
+              onGenerateStart={() => setSummaryPollingInterval(3000)}
             />
           )}
 
