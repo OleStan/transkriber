@@ -108,6 +108,8 @@ class Ajax::TranscriptionsController < ApplicationController
   end
 
   def transcription_update_params
-    params.require(:transcription).permit(:transcription, transcription_json: {})
+    text = params.require(:transcription).permit(:transcription)[:transcription]
+    json = params.dig(:transcription, :transcription_json)
+    { transcription: text, transcription_json: json.present? ? json.as_json : nil }
   end
 end

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Box, TextField, Chip } from '@mui/material';
 
 interface Segment {
@@ -15,26 +15,18 @@ interface Props {
 }
 
 const TranscriptionEditor: React.FC<Props> = ({ segments, onChange }) => {
-  const [localSegments, setLocalSegments] = useState<Segment[]>(segments);
-
-  // Sync if parent segments change (e.g. on initial load)
-  useEffect(() => {
-    setLocalSegments(segments);
-  }, [segments]);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleTextChange = useCallback((index: number, newText: string) => {
-    setLocalSegments(prev => {
-      const updated = prev.map((seg, i) =>
-        i === index ? { ...seg, text: newText } : seg
-      );
-      onChange(updated);
-      return updated;
-    });
-  }, [onChange]);
+    const updated = segments.map((seg, i) =>
+      i === index ? { ...seg, text: newText } : seg
+    );
+    onChange(updated);
+  }, [segments, onChange]);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {localSegments.map((segment, index) => (
+    <Box ref={containerRef} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      {segments.map((segment, index) => (
         <Box key={index} sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', px: 4, py: 1 }}>
           <Chip
             label={segment.timestamp}
@@ -59,7 +51,7 @@ const TranscriptionEditor: React.FC<Props> = ({ segments, onChange }) => {
             onKeyDown={(e) => {
               if (e.key === 'Tab') {
                 e.preventDefault();
-                const inputs = document.querySelectorAll('[data-segment-input]');
+                const inputs = containerRef.current?.querySelectorAll('[data-segment-input]') ?? [];
                 const currentIndex = Array.from(inputs).indexOf(e.currentTarget as Element);
                 const nextIndex = e.shiftKey ? currentIndex - 1 : currentIndex + 1;
                 if (nextIndex >= 0 && nextIndex < inputs.length) {

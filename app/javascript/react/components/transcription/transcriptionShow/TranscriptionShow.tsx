@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 
 import { LoaderFunctionArgs } from 'react-router-dom';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 // Type definitions for the transcription data
 interface ITranscriptionSegment {
@@ -90,6 +91,9 @@ const TranscriptionShow = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // Notification hook
+  const { showNotification } = useNotification();
+
   // Store hooks
   const setSeek = useAudioStore((state) => state.setSeek);
 
@@ -132,6 +136,7 @@ const TranscriptionShow = () => {
           text: s.text,
           start: s.start,
           end: s.end,
+          timestamp: s.timestamp,
         })),
       };
       await updateTranscription({
@@ -141,8 +146,8 @@ const TranscriptionShow = () => {
       }).unwrap();
       setIsEditing(false);
       setHasUnsavedChanges(false);
-    } catch {
-      // error handled server-side; UI will show existing error state
+    } catch (err) {
+      showNotification('Failed to save changes. Please try again.', 'danger');
     } finally {
       setIsSaving(false);
     }
