@@ -16,6 +16,10 @@ module Ajax
     end
 
     def update_password
+      if current_user.provider.present?
+        return render json: { errors: ['Password cannot be changed for accounts signed in with Google'] }, status: :unprocessable_entity
+      end
+
       if current_user.update_with_password(password_params)
         bypass_sign_in(current_user)
         render json: { message: 'Password updated' }

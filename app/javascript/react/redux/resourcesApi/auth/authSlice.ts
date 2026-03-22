@@ -111,6 +111,7 @@ export const authApi = createApi({
         method: 'PATCH',
         body,
       }),
+      transformResponse: (r: { message: string }) => toCamelCase(r),
     }),
   }),
 });

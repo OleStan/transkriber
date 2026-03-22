@@ -146,7 +146,9 @@ const Settings: React.FC = () => {
 
       if ('error' in result) {
         const errorData = (result.error as { data?: { errors?: string[] } })?.data;
-        const serverMessage = errorData?.errors?.[0] ?? 'Failed to update password';
+        const serverMessage = Array.isArray(errorData?.errors)
+          ? errorData.errors.join(', ')
+          : 'Failed to update password';
         showNotification(serverMessage, 'danger');
         setPasswordForm(prev => ({ ...prev, loading: false }));
       } else {
