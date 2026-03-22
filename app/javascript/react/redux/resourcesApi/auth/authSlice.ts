@@ -104,6 +104,14 @@ export const authApi = createApi({
       transformResponse: (r: { first_name: string; last_name: string }) => toCamelCase(r),
       invalidatesTags: ['Auth'],
     }),
+
+    updatePassword: builder.mutation<{ message: string }, { current_password: string; password: string; password_confirmation: string }>({
+      query: (body) => ({
+        url: 'ajax/user/update_password',
+        method: 'PATCH',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -114,4 +122,5 @@ export const {
   useSignupMutation,
   useGetCurrentUserQuery,
   useUpdateProfileMutation,
+  useUpdatePasswordMutation,
 } = authApi;

@@ -37,6 +37,7 @@ Rails.application.routes.draw do
     resources :transcriptions, only: %i[index show create destroy]
     resource :user, only: [] do
       patch :update_profile
+      patch :update_password
     end
   end
 

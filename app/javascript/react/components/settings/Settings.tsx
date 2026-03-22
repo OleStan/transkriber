@@ -19,11 +19,12 @@ import {
   Save as SaveIcon
 } from '@mui/icons-material';
 import { useNotification } from '../../contexts/NotificationContext';
-import { useUpdateProfileMutation, useGetCurrentUserQuery } from '../../redux/resourcesApi/auth/authSlice';
+import { useUpdateProfileMutation, useGetCurrentUserQuery, useUpdatePasswordMutation } from '../../redux/resourcesApi/auth/authSlice';
 
 const Settings: React.FC = () => {
   const { showNotification } = useNotification();
   const [updateProfile] = useUpdateProfileMutation();
+  const [updatePassword] = useUpdatePasswordMutation();
   const { data: currentUserData } = useGetCurrentUserQuery();
 
   // Pre-populate name from current user data if available
@@ -135,27 +136,31 @@ const Settings: React.FC = () => {
     if (hasError) return;
     
     setPasswordForm(prev => ({ ...prev, loading: true }));
-    
+
     try {
-      // TODO: Make API call to update password
-      // const response = await updateUserPassword({
-      //   currentPassword: passwordForm.currentPassword,
-      //   newPassword: passwordForm.newPassword
-      // });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      showNotification('Password updated successfully', 'success');
-      setPasswordForm({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-        showCurrentPassword: false,
-        showNewPassword: false,
-        showConfirmPassword: false,
-        loading: false
+      const result = await updatePassword({
+        current_password: passwordForm.currentPassword,
+        password: passwordForm.newPassword,
+        password_confirmation: passwordForm.confirmPassword,
       });
+
+      if ('error' in result) {
+        const errorData = (result.error as { data?: { errors?: string[] } })?.data;
+        const serverMessage = errorData?.errors?.[0] ?? 'Failed to update password';
+        showNotification(serverMessage, 'danger');
+        setPasswordForm(prev => ({ ...prev, loading: false }));
+      } else {
+        showNotification('Password updated successfully', 'success');
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+          showCurrentPassword: false,
+          showNewPassword: false,
+          showConfirmPassword: false,
+          loading: false
+        });
+      }
     } catch (error) {
       showNotification('Failed to update password', 'danger');
       setPasswordForm(prev => ({ ...prev, loading: false }));

@@ -3,13 +3,22 @@
 module Ajax
   class UsersController < ApplicationController
     before_action :authenticate_user!
-    before_action :set_account, except: %i[update_profile]
+    before_action :set_account, except: %i[update_profile update_password]
     before_action :set_user, only: %i[show update destroy]
-    before_action :authorize_account_management, except: %i[update_profile]
+    before_action :authorize_account_management, except: %i[update_profile update_password]
 
     def update_profile
       if current_user.update(profile_params)
         render json: { first_name: current_user.first_name, last_name: current_user.last_name }
+      else
+        render json: { errors: current_user.errors.full_messages }, status: :unprocessable_entity
+      end
+    end
+
+    def update_password
+      if current_user.update_with_password(password_params)
+        bypass_sign_in(current_user)
+        render json: { message: 'Password updated' }
       else
         render json: { errors: current_user.errors.full_messages }, status: :unprocessable_entity
       end
@@ -64,6 +73,10 @@ module Ajax
 
     def profile_params
       params.permit(:first_name, :last_name)
+    end
+
+    def password_params
+      params.permit(:current_password, :password, :password_confirmation)
     end
 
     def authorize_account_management
