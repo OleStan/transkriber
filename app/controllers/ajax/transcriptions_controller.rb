@@ -2,8 +2,8 @@
 
 class Ajax::TranscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_transcription, only: %i[show destroy export update]
-  before_action :verify_transcription_ownership, only: %i[show destroy export update]
+  before_action :set_transcription, only: %i[show destroy export update summarize]
+  before_action :verify_transcription_ownership, only: %i[show destroy export update summarize]
 
   def index
     result = Transcriptions::Index.perform(
@@ -70,6 +70,15 @@ class Ajax::TranscriptionsController < ApplicationController
     else
       render json: { errors: result.errors.full_messages }, status: :unprocessable_entity
     end
+  end
+
+  def summarize
+    if @transcription.transcription.blank?
+      return render json: { error: 'Transcription has no text to summarize' }, status: :unprocessable_entity
+    end
+
+    SummarizeTranscriptionWorker.perform_async(@transcription.id)
+    render json: { status: 'processing' }
   end
 
   def destroy

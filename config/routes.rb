@@ -36,6 +36,7 @@ Rails.application.routes.draw do
     end
     resources :transcriptions, only: %i[index show create destroy update] do
       get :export, on: :member
+      post :summarize, on: :member
     end
     resource :user, only: [] do
       patch :update_profile

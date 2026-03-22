@@ -9,6 +9,7 @@ import useActionCable, { TranscriptionMessage } from '../../../hooks/useActionCa
 import AdjustSegmentSizeSlider from './AdjustSegmentSizeSlider';
 import useAudioStore from '../../../stores/useAudioStore';
 import TranscriptionEditor from './TranscriptionEditor';
+import TranscriptionSummary, { SummaryData } from './TranscriptionSummary';
 import { Box, LinearProgress, Typography, Stack, Alert, Button, IconButton, CircularProgress, Snackbar, Menu, MenuItem, ListItemText, Chip } from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
@@ -50,6 +51,7 @@ interface TranscriptionDetailsResponse {
   progress?: number;
   error_message?: string;
   transcriptions: ITranscriptionSegment[] | string;
+  summary?: SummaryData | null;
 }
 
 interface LoaderData {
@@ -90,6 +92,9 @@ const TranscriptionShow = () => {
   const [editedSegments, setEditedSegments] = useState<ITranscriptionSegment[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Summary state
+  const [currentSummary, setCurrentSummary] = useState<SummaryData | null>(null);
 
   // Notification hook
   const { showNotification } = useNotification();
@@ -185,6 +190,10 @@ const TranscriptionShow = () => {
   useEffect(() => {
     if (!latestMessage) return;
 
+    if (latestMessage.summary) {
+      setCurrentSummary(latestMessage.summary as SummaryData);
+    }
+
     setTranscriptionState((prevState) => ({
       text: latestMessage.transcription_json || prevState.text,
       isCompleted: latestMessage.status === 'completed' || latestMessage.status === 'failed' || prevState.isCompleted,
@@ -194,6 +203,13 @@ const TranscriptionShow = () => {
       cancelled: latestMessage.status === 'cancelled' || prevState.cancelled,
     }));
   }, [latestMessage]);
+
+  // Sync summary from fetched transcription data
+  useEffect(() => {
+    if (transcription?.summary !== undefined) {
+      setCurrentSummary(transcription.summary ?? null);
+    }
+  }, [transcription?.summary]);
 
   // Determine what status text to display
   const getStatusText = useCallback(() => {
@@ -603,6 +619,21 @@ const TranscriptionShow = () => {
             )}
           </Box>
           
+          {/* AI Summary Panel — show when transcription is completed */}
+          {transcription?.status === 'completed' && (
+            <TranscriptionSummary
+              transcriptionId={Number(id)}
+              summary={currentSummary}
+              transcriptionText={
+                typeof transcription?.transcriptions === 'string'
+                  ? transcription.transcriptions
+                  : Array.isArray(transcription?.transcriptions)
+                  ? transcription.transcriptions.map((s) => s.text).join(' ')
+                  : null
+              }
+            />
+          )}
+
           {/* Progress State */}
           {showInProgress && !transcriptionState.cancelled && !transcriptionState.error ? (
             <Box sx={{ px: 4, py: 3 }}>

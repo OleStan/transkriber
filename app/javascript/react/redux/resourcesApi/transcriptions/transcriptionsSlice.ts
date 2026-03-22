@@ -82,6 +82,12 @@ export const transcriptionsSlice = transcriberApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { id }) => [{ type: 'Transcription' as const, id }],
     }),
+    summarizeTranscription: builder.mutation<{ status: string }, number>({
+      query: (id) => ({
+        url: `transcriptions/${id}/summarize`,
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
@@ -92,4 +98,5 @@ export const {
   useCreateTranscriptionMutation,
   useDeleteTranscriptionMutation,
   useUpdateTranscriptionMutation,
+  useSummarizeTranscriptionMutation,
 } = transcriptionsSlice;
