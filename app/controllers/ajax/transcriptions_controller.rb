@@ -2,8 +2,8 @@
 
 class Ajax::TranscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_transcription, only: %i[show destroy]
-  before_action :verify_transcription_ownership, only: %i[show destroy]
+  before_action :set_transcription, only: %i[show destroy export]
+  before_action :verify_transcription_ownership, only: %i[show destroy export]
 
   def index
     result = Transcriptions::Index.perform(
@@ -43,6 +43,17 @@ class Ajax::TranscriptionsController < ApplicationController
     else
       render json: { errors: result.errors.full_messages }, status: :unprocessable_entity
     end
+  end
+
+  def export
+    format = params[:format].to_s.downcase
+    unless %w[txt srt vtt].include?(format)
+      return render json: { error: 'Invalid format. Use txt, srt, or vtt.' }, status: :bad_request
+    end
+
+    content = Transcriptions::Exporter.call(@transcription, format)
+    filename = "#{(@transcription.title || 'transcription').parameterize}.#{format}"
+    send_data content, filename: filename, type: 'text/plain; charset=utf-8', disposition: 'attachment'
   end
 
   def destroy

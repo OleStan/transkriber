@@ -34,7 +34,9 @@ Rails.application.routes.draw do
     resources :accounts do
       resources :users
     end
-    resources :transcriptions, only: %i[index show create destroy]
+    resources :transcriptions, only: %i[index show create destroy] do
+      get :export, on: :member
+    end
     resource :user, only: [] do
       patch :update_profile
       patch :update_password

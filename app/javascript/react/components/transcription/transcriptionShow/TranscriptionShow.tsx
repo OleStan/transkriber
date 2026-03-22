@@ -8,7 +8,7 @@ import TranscriptionShowSkeleton from './TranscriptionShowSkeleton';
 import useActionCable, { TranscriptionMessage } from '../../../hooks/useActionCable';
 import AdjustSegmentSizeSlider from './AdjustSegmentSizeSlider';
 import useAudioStore from '../../../stores/useAudioStore';
-import { Box, LinearProgress, Typography, Stack, Alert, Button, IconButton, CircularProgress, Snackbar } from '@mui/material';
+import { Box, LinearProgress, Typography, Stack, Alert, Button, IconButton, CircularProgress, Snackbar, Menu, MenuItem, ListItemText } from '@mui/material';
 import { 
   PlayArrow as PlayArrowIcon,
   Cancel as CancelIcon,
@@ -62,6 +62,12 @@ export function loader({
 
 
 
+const EXPORT_FORMATS: { label: string; format: 'txt' | 'srt' | 'vtt' }[] = [
+  { label: 'Plain text (.txt)', format: 'txt' },
+  { label: 'Subtitles (.srt)', format: 'srt' },
+  { label: 'Web captions (.vtt)', format: 'vtt' },
+];
+
 const TranscriptionShow = () => {
   const { id } = useLoaderData() as LoaderData;
   const { data: transcription, isLoading } = useGetTranscriptionQuery(Number(id)) as { data: TranscriptionDetailsResponse | undefined, isLoading: boolean };
@@ -75,6 +81,7 @@ const TranscriptionShow = () => {
   });
   const [hoveredTimestamp, setHoveredTimestamp] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [downloadMenuAnchor, setDownloadMenuAnchor] = useState<null | HTMLElement>(null);
   
   // Store hooks
   const setSeek = useAudioStore((state) => state.setSeek);
@@ -145,6 +152,21 @@ const TranscriptionShow = () => {
     [transcriptionSegments]
   );
   
+  const handleDownloadButtonClick = (event: React.MouseEvent<HTMLElement>) => {
+    setDownloadMenuAnchor(event.currentTarget);
+  };
+
+  const handleDownloadMenuClose = () => {
+    setDownloadMenuAnchor(null);
+  };
+
+  const handleExport = (format: 'txt' | 'srt' | 'vtt') => {
+    const link = document.createElement('a');
+    link.href = `/ajax/transcriptions/${id}/export?format=${format}`;
+    link.click();
+    handleDownloadMenuClose();
+  };
+
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(transcriptWithTimestamps);
@@ -251,6 +273,7 @@ const TranscriptionShow = () => {
                 Copy
               </Button>
               <Button
+                onClick={handleDownloadButtonClick}
                 sx={{
                   minWidth: '84px',
                   height: '40px',
@@ -268,6 +291,36 @@ const TranscriptionShow = () => {
               >
                 Download
               </Button>
+              <Menu
+                anchorEl={downloadMenuAnchor}
+                open={Boolean(downloadMenuAnchor)}
+                onClose={handleDownloadMenuClose}
+                PaperProps={{
+                  sx: {
+                    bgcolor: '#1f282e',
+                    border: '1px solid #3d505c',
+                    borderRadius: '8px',
+                    color: 'white',
+                  }
+                }}
+              >
+                {EXPORT_FORMATS.map(({ label, format }) => (
+                  <MenuItem
+                    key={format}
+                    onClick={() => handleExport(format)}
+                    sx={{
+                      fontSize: '14px',
+                      color: '#9db1be',
+                      '&:hover': {
+                        bgcolor: '#2b3840',
+                        color: 'white',
+                      }
+                    }}
+                  >
+                    <ListItemText primary={label} />
+                  </MenuItem>
+                ))}
+              </Menu>
             </Box>
           </Box>
           
