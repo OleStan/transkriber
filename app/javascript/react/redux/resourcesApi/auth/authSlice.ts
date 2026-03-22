@@ -94,6 +94,15 @@ export const authApi = createApi({
       transformResponse: (response: AuthResponse) => toCamelCase(response),
       providesTags: ['Auth']
     }),
+
+    updateProfile: builder.mutation<{ firstName: string; lastName: string }, { firstName: string; lastName: string }>({
+      query: (body) => ({
+        url: 'ajax/user/update_profile',
+        method: 'PATCH',
+        body,
+      }),
+      transformResponse: (r: any) => toCamelCase(r),
+    }),
   }),
 });
 
@@ -103,4 +112,5 @@ export const {
   useLogoutMutation,
   useSignupMutation,
   useGetCurrentUserQuery,
+  useUpdateProfileMutation,
 } = authApi;

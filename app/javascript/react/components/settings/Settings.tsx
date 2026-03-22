@@ -19,9 +19,11 @@ import {
   Save as SaveIcon
 } from '@mui/icons-material';
 import { useNotification } from '../../contexts/NotificationContext';
+import { useUpdateProfileMutation } from '../../redux/resourcesApi/auth/authSlice';
 
 const Settings: React.FC = () => {
   const { showNotification } = useNotification();
+  const [updateProfile] = useUpdateProfileMutation();
   
   // Form states
   const [nameForm, setNameForm] = useState({
@@ -60,16 +62,20 @@ const Settings: React.FC = () => {
     }
     
     setNameForm(prev => ({ ...prev, loading: true }));
-    
+
+    const parts = nameForm.name.trim().split(/\s+/);
+    const firstName = parts[0] || '';
+    const lastName = parts.slice(1).join(' ') || '';
+
     try {
-      // TODO: Make API call to update name
-      // const response = await updateUserName({ name: nameForm.name });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      showNotification('Name updated successfully', 'success');
-      setNameForm({ name: '', loading: false });
+      const result = await updateProfile({ firstName, lastName });
+      if ('error' in result) {
+        showNotification('Failed to update name', 'danger');
+        setNameForm(prev => ({ ...prev, loading: false }));
+      } else {
+        showNotification('Name updated successfully', 'success');
+        setNameForm({ name: '', loading: false });
+      }
     } catch (error) {
       showNotification('Failed to update name', 'danger');
       setNameForm(prev => ({ ...prev, loading: false }));

@@ -35,6 +35,9 @@ Rails.application.routes.draw do
       resources :users
     end
     resources :transcriptions, only: %i[index show create destroy]
+    resource :user, only: [] do
+      patch :update_profile
+    end
   end
 
   namespace :api do

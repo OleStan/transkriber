@@ -3,9 +3,17 @@
 module Ajax
   class UsersController < ApplicationController
     before_action :authenticate_user!
-    before_action :set_account
+    before_action :set_account, except: %i[update_profile]
     before_action :set_user, only: %i[show update destroy]
-    before_action :authorize_account_management
+    before_action :authorize_account_management, except: %i[update_profile]
+
+    def update_profile
+      if current_user.update(first_name: params[:first_name], last_name: params[:last_name])
+        render json: { first_name: current_user.first_name, last_name: current_user.last_name }
+      else
+        render json: { errors: current_user.errors.full_messages }, status: :unprocessable_entity
+      end
+    end
 
     def index
       users = current_user.admin? ? @account.users : [current_user]
