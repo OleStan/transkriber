@@ -19,15 +19,21 @@ import {
   Save as SaveIcon
 } from '@mui/icons-material';
 import { useNotification } from '../../contexts/NotificationContext';
-import { useUpdateProfileMutation } from '../../redux/resourcesApi/auth/authSlice';
+import { useUpdateProfileMutation, useGetCurrentUserQuery } from '../../redux/resourcesApi/auth/authSlice';
 
 const Settings: React.FC = () => {
   const { showNotification } = useNotification();
   const [updateProfile] = useUpdateProfileMutation();
-  
+  const { data: currentUserData } = useGetCurrentUserQuery();
+
+  // Pre-populate name from current user data if available
+  const currentUserName = currentUserData?.user
+    ? [currentUserData.user.first_name, currentUserData.user.last_name].filter(Boolean).join(' ')
+    : '';
+
   // Form states
   const [nameForm, setNameForm] = useState({
-    name: '',
+    name: currentUserName,
     loading: false
   });
   
@@ -60,15 +66,23 @@ const Settings: React.FC = () => {
       setErrors(prev => ({ ...prev, name: 'Name is required' }));
       return;
     }
-    
+    if (nameForm.name.trim().length < 2) {
+      setErrors(prev => ({ ...prev, name: 'Name must be at least 2 characters' }));
+      return;
+    }
+    if (nameForm.name.trim().length > 60) {
+      setErrors(prev => ({ ...prev, name: 'Name must be at most 60 characters' }));
+      return;
+    }
+
     setNameForm(prev => ({ ...prev, loading: true }));
 
     const parts = nameForm.name.trim().split(/\s+/);
-    const firstName = parts[0] || '';
-    const lastName = parts.slice(1).join(' ') || '';
+    const first_name = parts[0] || '';
+    const last_name = parts.slice(1).join(' ') || '';
 
     try {
-      const result = await updateProfile({ firstName, lastName });
+      const result = await updateProfile({ first_name, last_name });
       if ('error' in result) {
         showNotification('Failed to update name', 'danger');
         setNameForm(prev => ({ ...prev, loading: false }));

@@ -95,13 +95,14 @@ export const authApi = createApi({
       providesTags: ['Auth']
     }),
 
-    updateProfile: builder.mutation<{ firstName: string; lastName: string }, { firstName: string; lastName: string }>({
+    updateProfile: builder.mutation<{ first_name: string; last_name: string }, { first_name: string; last_name: string }>({
       query: (body) => ({
         url: 'ajax/user/update_profile',
         method: 'PATCH',
         body,
       }),
-      transformResponse: (r: any) => toCamelCase(r),
+      transformResponse: (r: { first_name: string; last_name: string }) => toCamelCase(r),
+      invalidatesTags: ['Auth'],
     }),
   }),
 });

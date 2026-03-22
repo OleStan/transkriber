@@ -8,7 +8,7 @@ module Ajax
     before_action :authorize_account_management, except: %i[update_profile]
 
     def update_profile
-      if current_user.update(first_name: params[:first_name], last_name: params[:last_name])
+      if current_user.update(profile_params)
         render json: { first_name: current_user.first_name, last_name: current_user.last_name }
       else
         render json: { errors: current_user.errors.full_messages }, status: :unprocessable_entity
@@ -60,6 +60,10 @@ module Ajax
       permitted = %i[email first_name last_name password password_confirmation]
       permitted << :admin if current_user.admin?
       params.require(:user).permit(permitted)
+    end
+
+    def profile_params
+      params.permit(:first_name, :last_name)
     end
 
     def authorize_account_management
