@@ -10,16 +10,31 @@ import {
   Menu,
   MenuItem,
   InputAdornment,
-  Stack
+  Stack,
+  Fab,
+  Pagination,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   KeyboardArrowDown as ArrowDownIcon,
+  Add as AddIcon,
 } from '@mui/icons-material';
-import { Pagination } from '@mui/material';
 import QuickAddFileOrUrl from '../home/QuickAddFile/QuickAddFileOrUrl';
 import StyledTranscriptionsTable from './transcriptionsTable/StyledTranscriptionsTable';
 import { cable } from '../../lib/cable';
+import { DS } from '../../theme';
+
+const filterButtonSx = {
+  bgcolor: DS.surfaceHigh,
+  color: DS.onSurfaceVariant,
+  borderRadius: '9999px',
+  px: 2,
+  py: 0.75,
+  fontSize: '13px',
+  fontFamily: '"Inter", sans-serif',
+  border: `1px solid ${DS.outlineVariant}30`,
+  '&:hover': { bgcolor: DS.surfaceHighest, color: DS.onSurface },
+};
 
 const Transcriptions = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -29,65 +44,51 @@ const Transcriptions = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
-  
-  // Menu anchors for filters
+
   const [statusAnchor, setStatusAnchor] = useState<null | HTMLElement>(null);
   const [dateAnchor, setDateAnchor] = useState<null | HTMLElement>(null);
   const [typeAnchor, setTypeAnchor] = useState<null | HTMLElement>(null);
 
-  // Format date for API
   const formatDateForAPI = (dateFilter: string | null): { start_date: string | null; end_date: string | null } => {
     if (!dateFilter) return { start_date: null, end_date: null };
-    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     switch (dateFilter) {
-      case 'today':
+      case 'today': {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        return {
-          start_date: today.toISOString().split('T')[0],
-          end_date: tomorrow.toISOString().split('T')[0]
-        };
-      case 'week':
+        return { start_date: today.toISOString().split('T')[0], end_date: tomorrow.toISOString().split('T')[0] };
+      }
+      case 'week': {
         const weekAgo = new Date(today);
         weekAgo.setDate(weekAgo.getDate() - 7);
-        return {
-          start_date: weekAgo.toISOString().split('T')[0],
-          end_date: null
-        };
-      case 'month':
+        return { start_date: weekAgo.toISOString().split('T')[0], end_date: null };
+      }
+      case 'month': {
         const monthAgo = new Date(today);
         monthAgo.setMonth(monthAgo.getMonth() - 1);
-        return {
-          start_date: monthAgo.toISOString().split('T')[0],
-          end_date: null
-        };
+        return { start_date: monthAgo.toISOString().split('T')[0], end_date: null };
+      }
       default:
         return { start_date: null, end_date: null };
     }
   };
-  
+
   const dateRange = formatDateForAPI(dateFilter);
-  
-  const { data: transcriptions, error, isLoading, refetch } = useGetTranscriptionsQuery({
+
+  const { data: transcriptions, error, isLoading } = useGetTranscriptionsQuery({
     page: currentPage,
     status: statusFilter,
     q: searchQuery || null,
     start_date: dateRange.start_date,
     end_date: dateRange.end_date,
-    type: typeFilter
+    type: typeFilter,
   });
 
-  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+  const handlePageChange = (_: React.ChangeEvent<unknown>, value: number) => {
     setCurrentPage(value);
-    setSearchParams({ page: value.toString() }); // Update URL search params
+    setSearchParams({ page: value.toString() });
   };
-
-  useEffect(() => {
-    if (isLoading) return;
-  }, [transcriptions]);
 
   const records = transcriptions?.transcriptions || [];
   const [updates, setUpdates] = useState<Record<number, { status: string }>>({});
@@ -98,438 +99,235 @@ const Transcriptions = () => {
         { channel: 'TranscriptionChannel', room: id.toString() },
         {
           received(data: { status: string }) {
-            setUpdates(prev => ({ ...prev, [id]: data }));
+            setUpdates((prev) => ({ ...prev, [id]: data }));
           },
         }
       )
     );
     return () => subs.forEach((sub: any) => sub.unsubscribe());
   }, [records]);
-  
-  // Apply real-time status updates to the records
-  const displayRecords = records.map(tr => ({ 
-    ...tr, 
-    status: updates[tr.id]?.status || tr.status 
-  }));
+
+  const displayRecords = records.map((tr) => ({ ...tr, status: updates[tr.id]?.status || tr.status }));
 
   const isFilteringOrSearching = Boolean(
-    (searchQuery && searchQuery.trim() !== '') ||
-    statusFilter ||
-    dateFilter ||
-    typeFilter
+    (searchQuery && searchQuery.trim() !== '') || statusFilter || dateFilter || typeFilter
   );
   const isEmpty = Boolean(transcriptions?.transcriptions && transcriptions.transcriptions.length === 0);
 
-
-
   const handleFilterClick = (event: React.MouseEvent<HTMLElement>, filterType: string) => {
-    switch (filterType) {
-      case 'status':
-        setStatusAnchor(event.currentTarget);
-        break;
-      case 'date':
-        setDateAnchor(event.currentTarget);
-        break;
-      case 'type':
-        setTypeAnchor(event.currentTarget);
-        break;
-    }
+    if (filterType === 'status') setStatusAnchor(event.currentTarget);
+    else if (filterType === 'date') setDateAnchor(event.currentTarget);
+    else if (filterType === 'type') setTypeAnchor(event.currentTarget);
   };
 
   const handleFilterClose = (filterType: string, value?: string | null) => {
-    switch (filterType) {
-      case 'status':
-        setStatusAnchor(null);
-        if (value !== undefined) setStatusFilter(value);
-        break;ґ
-      case 'date':
-        setDateAnchor(null);
-        if (value !== undefined) setDateFilter(value);
-        break;
-      case 'type':
-        setTypeAnchor(null);
-        if (value !== undefined) setTypeFilter(value);
-        break;
-    }
+    if (filterType === 'status') { setStatusAnchor(null); if (value !== undefined) setStatusFilter(value); }
+    else if (filterType === 'date') { setDateAnchor(null); if (value !== undefined) setDateFilter(value); }
+    else if (filterType === 'type') { setTypeAnchor(null); if (value !== undefined) setTypeFilter(value); }
   };
-
-
 
   if (isLoading) {
     return (
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          height: '100vh',
-          bgcolor: '#141b1f'
-        }}
-      >
-        <CircularProgress sx={{ color: 'white' }} />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', bgcolor: DS.bg }}>
+        <CircularProgress sx={{ color: DS.primary }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ bgcolor: '#141b1f', minHeight: '100vh', color: 'white', p: 4 }}>
-        <Typography variant="body1" sx={{ color: 'error.main' }}>
+      <Box sx={{ bgcolor: DS.bg, minHeight: '100vh', color: DS.onSurface, p: 4 }}>
+        <Typography sx={{ color: DS.error, fontFamily: '"Inter", sans-serif' }}>
           Error occurred: {error instanceof Error ? error.message : 'Unknown error'}
         </Typography>
       </Box>
     );
   }
 
+  const SearchAndFilters = () => (
+    <>
+      {/* Search Bar */}
+      <Box sx={{ mb: 3 }}>
+        <TextField
+          fullWidth
+          placeholder="Search your archive..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          variant="standard"
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: DS.outline, fontSize: 20 }} />
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            '& .MuiInput-root': {
+              bgcolor: DS.surfaceLowest,
+              color: DS.onSurface,
+              fontFamily: '"Newsreader", serif',
+              fontSize: '1.125rem',
+              px: 2,
+              py: 1,
+              borderRadius: '12px 12px 0 0',
+              '&::before': { display: 'none' },
+              '&::after': { borderBottomColor: DS.primary },
+              borderBottom: `2px solid ${DS.outlineVariant}30`,
+              '&.Mui-focused': { borderBottomColor: DS.primary },
+            },
+            '& .MuiInputBase-input::placeholder': { color: `${DS.outline}80`, opacity: 1 },
+          }}
+        />
+      </Box>
+
+      {/* Filters */}
+      <Box sx={{ display: 'flex', gap: 1.5, mb: 3, flexWrap: 'wrap' }}>
+        <Button onClick={(e) => handleFilterClick(e, 'status')} endIcon={<ArrowDownIcon />} sx={filterButtonSx}>
+          {statusFilter ? `Status: ${statusFilter}` : 'Status'}
+        </Button>
+        <Menu anchorEl={statusAnchor} open={Boolean(statusAnchor)} onClose={() => handleFilterClose('status')}>
+          <MenuItem onClick={() => handleFilterClose('status', null)}>All</MenuItem>
+          <MenuItem onClick={() => handleFilterClose('status', 'completed')}>Completed</MenuItem>
+          <MenuItem onClick={() => handleFilterClose('status', 'processing')}>Processing</MenuItem>
+          <MenuItem onClick={() => handleFilterClose('status', 'failed')}>Failed</MenuItem>
+        </Menu>
+
+        <Button onClick={(e) => handleFilterClick(e, 'date')} endIcon={<ArrowDownIcon />} sx={filterButtonSx}>
+          {dateFilter ? `Date: ${dateFilter}` : 'Date'}
+        </Button>
+        <Menu anchorEl={dateAnchor} open={Boolean(dateAnchor)} onClose={() => handleFilterClose('date')}>
+          <MenuItem onClick={() => handleFilterClose('date', null)}>All time</MenuItem>
+          <MenuItem onClick={() => handleFilterClose('date', 'today')}>Today</MenuItem>
+          <MenuItem onClick={() => handleFilterClose('date', 'week')}>This week</MenuItem>
+          <MenuItem onClick={() => handleFilterClose('date', 'month')}>This month</MenuItem>
+        </Menu>
+
+        <Button onClick={(e) => handleFilterClick(e, 'type')} endIcon={<ArrowDownIcon />} sx={filterButtonSx}>
+          {typeFilter ? `Type: ${typeFilter}` : 'Type'}
+        </Button>
+        <Menu anchorEl={typeAnchor} open={Boolean(typeAnchor)} onClose={() => handleFilterClose('type')}>
+          <MenuItem onClick={() => handleFilterClose('type', null)}>All</MenuItem>
+          <MenuItem onClick={() => handleFilterClose('type', 'audio')}>Audio</MenuItem>
+          <MenuItem onClick={() => handleFilterClose('type', 'video')}>Video</MenuItem>
+        </Menu>
+      </Box>
+    </>
+  );
+
   return (
     <Box
       sx={{
         minHeight: 'calc(100vh - 64px)',
-        bgcolor: '#111b22',
+        bgcolor: DS.bg,
+        pt: '64px',
         py: { xs: 3, sm: 4, md: 5 },
-        px: { xs: 2, sm: 3, md: 4 }
+        px: { xs: 2, sm: 3, md: 4 },
+        pb: { xs: 12, md: 6 },
       }}
     >
       <Box sx={{ maxWidth: '1400px', mx: 'auto' }}>
         {/* Page Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Typography 
-              variant="h3" 
-              sx={{ 
-                fontWeight: 'bold', 
-                color: 'white',
-                fontSize: '32px',
-                lineHeight: 1.2
-              }}
-            >
-              My Files
-            </Typography>
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: '#2b3840',
-                color: 'white',
-                borderRadius: '20px',
-                px: 2,
-                py: 1,
-                fontSize: '14px',
-                fontWeight: 'medium',
-                '&:hover': {
-                  bgcolor: '#3d505c'
-                }
-              }}
-            >
-              New File
-            </Button>
-          </Box>
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            sx={{
+              fontFamily: '"Manrope", sans-serif',
+              fontWeight: 800,
+              fontSize: { xs: '2rem', md: '2.5rem' },
+              color: DS.onSurface,
+              letterSpacing: '-0.02em',
+              lineHeight: 1.2,
+              mb: 0.5,
+            }}
+          >
+            Transcripts
+          </Typography>
+          <Typography
+            sx={{
+              fontFamily: '"Newsreader", serif',
+              fontSize: '1.125rem',
+              color: DS.onSurfaceVariant,
+              fontStyle: 'italic',
+            }}
+          >
+            The archive of your digital narratives.
+          </Typography>
+        </Box>
 
-          {isEmpty ? (
-            isFilteringOrSearching ? (
-              <>
-                {/* Search Bar */}
-                <Box sx={{ mb: 4 }}>
-                  <TextField
-                    fullWidth
-                    placeholder="Search files"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon sx={{ color: '#9db1be' }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        bgcolor: '#2b3840',
-                        borderRadius: '12px',
-                        height: '48px',
-                        '& fieldset': {
-                          border: 'none',
-                        },
-                        '&:hover fieldset': {
-                          border: 'none',
-                        },
-                        '&.Mui-focused fieldset': {
-                          border: 'none',
-                        },
-                      },
-                      '& .MuiOutlinedInput-input': {
-                        color: 'white',
-                        '&::placeholder': {
-                          color: '#9db1be',
-                          opacity: 1,
-                        },
-                      },
-                    }}
-                  />
-                </Box>
-
-                {/* Filter Buttons */}
-                <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-                  <Button
-                    onClick={(e) => handleFilterClick(e, 'status')}
-                    endIcon={<ArrowDownIcon />}
-                    sx={{
-                      bgcolor: '#2b3840',
-                      color: 'white',
-                      borderRadius: '20px',
-                      px: 2,
-                      py: 1,
-                      fontSize: '14px',
-                      fontWeight: 'medium',
-                      '&:hover': {
-                        bgcolor: '#3d505c'
-                      }
-                    }}
-                  >
-                    Status
-                  </Button>
-                  <Menu
-                    anchorEl={statusAnchor}
-                    open={Boolean(statusAnchor)}
-                    onClose={() => handleFilterClose('status')}
-                  >
-                    <MenuItem onClick={() => handleFilterClose('status', null)}>All</MenuItem>
-                    <MenuItem onClick={() => handleFilterClose('status', 'completed')}>Completed</MenuItem>
-                    <MenuItem onClick={() => handleFilterClose('status', 'processing')}>Processing</MenuItem>
-                    <MenuItem onClick={() => handleFilterClose('status', 'failed')}>Failed</MenuItem>
-                  </Menu>
-
-                  <Button
-                    onClick={(e) => handleFilterClick(e, 'date')}
-                    endIcon={<ArrowDownIcon />}
-                    sx={{
-                      bgcolor: '#2b3840',
-                      color: 'white',
-                      borderRadius: '20px',
-                      px: 2,
-                      py: 1,
-                      fontSize: '14px',
-                      fontWeight: 'medium',
-                      '&:hover': {
-                        bgcolor: '#3d505c'
-                      }
-                    }}
-                  >
-                    Date
-                  </Button>
-                  <Menu
-                    anchorEl={dateAnchor}
-                    open={Boolean(dateAnchor)}
-                    onClose={() => handleFilterClose('date')}
-                  >
-                    <MenuItem onClick={() => handleFilterClose('date', null)}>All</MenuItem>
-                    <MenuItem onClick={() => handleFilterClose('date', 'today')}>Today</MenuItem>
-                    <MenuItem onClick={() => handleFilterClose('date', 'week')}>This Week</MenuItem>
-                    <MenuItem onClick={() => handleFilterClose('date', 'month')}>This Month</MenuItem>
-                  </Menu>
-
-                  <Button
-                    onClick={(e) => handleFilterClick(e, 'type')}
-                    endIcon={<ArrowDownIcon />}
-                    sx={{
-                      bgcolor: '#2b3840',
-                      color: 'white',
-                      borderRadius: '20px',
-                      px: 2,
-                      py: 1,
-                      fontSize: '14px',
-                      fontWeight: 'medium',
-                      '&:hover': {
-                        bgcolor: '#3d505c'
-                      }
-                    }}
-                  >
-                    Type
-                  </Button>
-                  <Menu
-                    anchorEl={typeAnchor}
-                    open={Boolean(typeAnchor)}
-                    onClose={() => handleFilterClose('type')}
-                  >
-                    <MenuItem onClick={() => handleFilterClose('type', null)}>All</MenuItem>
-                    <MenuItem onClick={() => handleFilterClose('type', 'audio')}>Audio</MenuItem>
-                    <MenuItem onClick={() => handleFilterClose('type', 'video')}>Video</MenuItem>
-                  </Menu>
-                </Box>
-
-                {/* Empty State */}
-                <Box sx={{ textAlign: 'center', mt: 8 }}>
-                  <Typography variant="h6" sx={{ color: '#9db1be', mb: 1 }}>
-                    No results found
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: '#9db1be' }}>
-                    Try adjusting your filters or search.
-                  </Typography>
-                </Box>
-              </>
-            ) : (
-              <QuickAddFileOrUrl />
-            )
-          ) : (
+        {isEmpty ? (
+          isFilteringOrSearching ? (
             <>
-              {/* Search Bar */}
-              <Box sx={{ mb: 4 }}>
-                <TextField
-                  fullWidth
-                  placeholder="Search files"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ color: '#9db1be' }} />
-                      </InputAdornment>
-                    ),
-                  }}
+              <SearchAndFilters />
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  mt: 8,
+                  p: 6,
+                  bgcolor: DS.surfaceLow,
+                  borderRadius: '16px',
+                  border: `1px solid ${DS.outlineVariant}1a`,
+                }}
+              >
+                <Typography sx={{ fontFamily: '"Manrope", sans-serif', fontWeight: 700, fontSize: '1.125rem', color: DS.onSurface, mb: 1 }}>
+                  No results found
+                </Typography>
+                <Typography sx={{ fontFamily: '"Newsreader", serif', fontSize: '1rem', color: DS.onSurfaceVariant, fontStyle: 'italic' }}>
+                  Try adjusting your filters or search query.
+                </Typography>
+              </Box>
+            </>
+          ) : (
+            <QuickAddFileOrUrl />
+          )
+        ) : (
+          <>
+            <SearchAndFilters />
+
+            {/* Table */}
+            <Box sx={{ mb: 4 }}>
+              <StyledTranscriptionsTable transcriptions={displayRecords} />
+            </Box>
+
+            {/* Pagination */}
+            {transcriptions && transcriptions.totalPages > 1 && (
+              <Stack direction="row" justifyContent="center" sx={{ mt: 2 }}>
+                <Pagination
+                  count={transcriptions.totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: '#2b3840',
-                      borderRadius: '12px',
-                      height: '48px',
-                      '& fieldset': {
-                        border: 'none',
-                      },
-                      '&:hover fieldset': {
-                        border: 'none',
-                      },
-                      '&.Mui-focused fieldset': {
-                        border: 'none',
-                      },
+                    '& .MuiPaginationItem-root': {
+                      color: DS.onSurfaceVariant,
+                      borderRadius: '8px',
+                      fontFamily: '"Inter", sans-serif',
+                      '&:hover': { bgcolor: DS.surfaceHighest },
                     },
-                    '& .MuiOutlinedInput-input': {
-                      color: 'white',
-                      '&::placeholder': {
-                        color: '#9db1be',
-                        opacity: 1,
-                      },
+                    '& .Mui-selected': {
+                      bgcolor: `${DS.primary} !important`,
+                      color: `${DS.onPrimary} !important`,
                     },
                   }}
                 />
-              </Box>
-
-              {/* Filter Buttons */}
-              <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-                <Button
-                  onClick={(e) => handleFilterClick(e, 'status')}
-                  endIcon={<ArrowDownIcon />}
-                  sx={{
-                    bgcolor: '#2b3840',
-                    color: 'white',
-                    borderRadius: '20px',
-                    px: 2,
-                    py: 1,
-                    fontSize: '14px',
-                    fontWeight: 'medium',
-                    '&:hover': {
-                      bgcolor: '#3d505c'
-                    }
-                  }}
-                >
-                  Status
-                </Button>
-                <Menu
-                  anchorEl={statusAnchor}
-                  open={Boolean(statusAnchor)}
-                  onClose={() => handleFilterClose('status')}
-                >
-                  <MenuItem onClick={() => handleFilterClose('status', null)}>All</MenuItem>
-                  <MenuItem onClick={() => handleFilterClose('status', 'completed')}>Completed</MenuItem>
-                  <MenuItem onClick={() => handleFilterClose('status', 'processing')}>Processing</MenuItem>
-                  <MenuItem onClick={() => handleFilterClose('status', 'failed')}>Failed</MenuItem>
-                </Menu>
-
-                <Button
-                  onClick={(e) => handleFilterClick(e, 'date')}
-                  endIcon={<ArrowDownIcon />}
-                  sx={{
-                    bgcolor: '#2b3840',
-                    color: 'white',
-                    borderRadius: '20px',
-                    px: 2,
-                    py: 1,
-                    fontSize: '14px',
-                    fontWeight: 'medium',
-                    '&:hover': {
-                      bgcolor: '#3d505c'
-                    }
-                  }}
-                >
-                  Date
-                </Button>
-                <Menu
-                  anchorEl={dateAnchor}
-                  open={Boolean(dateAnchor)}
-                  onClose={() => handleFilterClose('date')}
-                >
-                  <MenuItem onClick={() => handleFilterClose('date', null)}>All</MenuItem>
-                  <MenuItem onClick={() => handleFilterClose('date', 'today')}>Today</MenuItem>
-                  <MenuItem onClick={() => handleFilterClose('date', 'week')}>This Week</MenuItem>
-                  <MenuItem onClick={() => handleFilterClose('date', 'month')}>This Month</MenuItem>
-                </Menu>
-
-                <Button
-                  onClick={(e) => handleFilterClick(e, 'type')}
-                  endIcon={<ArrowDownIcon />}
-                  sx={{
-                    bgcolor: '#2b3840',
-                    color: 'white',
-                    borderRadius: '20px',
-                    px: 2,
-                    py: 1,
-                    fontSize: '14px',
-                    fontWeight: 'medium',
-                    '&:hover': {
-                      bgcolor: '#3d505c'
-                    }
-                  }}
-                >
-                  Type
-                </Button>
-                <Menu
-                  anchorEl={typeAnchor}
-                  open={Boolean(typeAnchor)}
-                  onClose={() => handleFilterClose('type')}
-                >
-                  <MenuItem onClick={() => handleFilterClose('type', null)}>All</MenuItem>
-                  <MenuItem onClick={() => handleFilterClose('type', 'audio')}>Audio</MenuItem>
-                  <MenuItem onClick={() => handleFilterClose('type', 'video')}>Video</MenuItem>
-                </Menu>
-              </Box>
-
-              {/* Table */}
-              <Box sx={{ mb: 4 }}>
-                <StyledTranscriptionsTable transcriptions={displayRecords} />
-              </Box>
-
-              {/* Pagination */}
-              {transcriptions && transcriptions?.totalPages > 1 && (
-                <Stack direction='row' spacing={2} justifyContent='center' mt={4}>
-                  <Pagination
-                    count={transcriptions?.totalPages}
-                    page={currentPage}
-                    onChange={handlePageChange}
-                    sx={{
-                      '& .MuiPaginationItem-root': {
-                        color: 'white',
-                        '&:hover': {
-                          bgcolor: '#2b3840'
-                        }
-                      },
-                      '& .Mui-selected': {
-                        bgcolor: '#2b3840 !important',
-                        color: 'white'
-                      }
-                    }}
-                  />
-                </Stack>
-              )}
-            </>
-          )}
-        </Box>
+              </Stack>
+            )}
+          </>
+        )}
       </Box>
+
+      {/* FAB */}
+      <Fab
+        sx={{
+          position: 'fixed',
+          bottom: { xs: 96, md: 48 },
+          right: { xs: 24, md: 48 },
+          background: DS.primaryGradient,
+          color: DS.onPrimary,
+          boxShadow: '0 20px 40px rgba(6, 14, 32, 0.4)',
+          '&:hover': { transform: 'scale(1.05)', background: DS.primaryGradient },
+        }}
+      >
+        <AddIcon />
+      </Fab>
+    </Box>
   );
 };
 

@@ -31,6 +31,7 @@ class Transcriptions::Create < ActiveInteractor::Organizer::Base
   after_perform :transcribe_audio, if: -> { context.success? }
 
   organize do
+    add Billing::CheckQuota
     add Transcriptions::ConvertVideoToAudio, if: -> { needs_video_conversion? }
     add Transcriptions::CreateTranscription, before: :set_create_params
   end

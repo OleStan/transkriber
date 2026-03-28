@@ -6,10 +6,12 @@ class User < ApplicationRecord
          :omniauthable, omniauth_providers: [:google_oauth2]
          
   belongs_to :account, optional: true
-  
+
   validates :first_name, :last_name, presence: true
-  
+
   accepts_nested_attributes_for :account
+
+  after_create :create_free_subscription
   
   def full_name
     "#{first_name} #{last_name}"
@@ -36,6 +38,13 @@ class User < ApplicationRecord
     end
     
     user.save
+    user.account&.create_free_subscription_if_missing
     user
+  end
+
+  private
+
+  def create_free_subscription
+    account&.create_free_subscription_if_missing
   end
 end

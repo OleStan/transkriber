@@ -5,8 +5,10 @@ import {
   ContentCopy as ContentCopyIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
+  CheckCircleOutline as CheckCircleIcon,
 } from '@mui/icons-material';
 import { useSummarizeTranscriptionMutation } from '../../../redux/resourcesApi/transcriptions/transcriptionsSlice';
+import { DS } from '../../../theme';
 
 export interface SummaryData {
   overview: string;
@@ -35,7 +37,6 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
 
   const [triggerSummarize] = useSummarizeTranscriptionMutation();
 
-  // Sync prop changes (from WebSocket updates via parent)
   React.useEffect(() => {
     if (summary && summary !== localSummary) {
       setLocalSummary(summary);
@@ -51,7 +52,6 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
     onGenerateStart?.();
     try {
       await triggerSummarize(transcriptionId).unwrap();
-      // Worker runs async; actual update comes via WebSocket → parent updates summary prop
     } catch {
       setError('Failed to generate summary. Please try again.');
       setIsGenerating(false);
@@ -79,12 +79,12 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
   const canGenerate = !!transcriptionText;
 
   return (
-    <Box sx={{ px: 4, pb: 3 }}>
+    <Box sx={{ mb: 3 }}>
       <Box
         sx={{
-          borderRadius: '12px',
-          bgcolor: '#1a2632',
-          border: '1px solid #2d4a5c',
+          borderRadius: '16px',
+          bgcolor: DS.tertiaryContainer,
+          border: `1px solid ${DS.outlineVariant}1a`,
           overflow: 'hidden',
         }}
       >
@@ -100,144 +100,158 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
           }}
           onClick={() => setIsExpanded((e) => !e)}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <AutoAwesomeIcon sx={{ color: '#1993e5', fontSize: '18px' }} />
-            <Typography sx={{ color: 'white', fontWeight: 'bold', fontSize: '15px' }}>
-              AI Summary
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: '8px',
+                bgcolor: 'rgba(202, 128, 30, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <AutoAwesomeIcon sx={{ color: DS.tertiary, fontSize: '18px' }} />
+            </Box>
+            <Typography sx={{ color: DS.onSurface, fontFamily: '"Manrope", sans-serif', fontWeight: 700, fontSize: '15px' }}>
+              AI Intel Summary
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {localSummary && (
               <IconButton
                 size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleCopy();
-                }}
+                onClick={(e) => { e.stopPropagation(); handleCopy(); }}
                 title="Copy summary"
-                sx={{ color: copied ? '#4caf50' : '#93b3c8' }}
+                sx={{ color: copied ? '#34d399' : DS.outline, '&:hover': { bgcolor: 'transparent' } }}
               >
                 <ContentCopyIcon fontSize="small" />
               </IconButton>
             )}
             <Button
               size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleGenerate();
-              }}
+              onClick={(e) => { e.stopPropagation(); handleGenerate(); }}
               disabled={!canGenerate || isGenerating}
               sx={{
-                color: '#1993e5',
+                color: DS.tertiary,
+                fontFamily: '"Inter", sans-serif',
                 textTransform: 'none',
                 fontSize: '13px',
+                fontWeight: 600,
                 px: 2,
                 py: 0.5,
                 minWidth: 'auto',
-                '&:hover': { bgcolor: '#243947' },
-                '&:disabled': { color: '#4a6070' },
+                borderRadius: '8px',
+                '&:hover': { bgcolor: 'rgba(255, 184, 105, 0.1)' },
+                '&:disabled': { color: `${DS.tertiary}60` },
               }}
             >
               {isGenerating ? 'Generating...' : localSummary ? 'Regenerate' : 'Generate'}
             </Button>
             {isExpanded ? (
-              <ExpandLessIcon sx={{ color: '#93b3c8', fontSize: '18px' }} />
+              <ExpandLessIcon sx={{ color: DS.outline, fontSize: '18px' }} />
             ) : (
-              <ExpandMoreIcon sx={{ color: '#93b3c8', fontSize: '18px' }} />
+              <ExpandMoreIcon sx={{ color: DS.outline, fontSize: '18px' }} />
             )}
           </Box>
         </Box>
 
         {/* Body */}
         <Collapse in={isExpanded}>
-          <Box sx={{ px: 3, pb: 3, borderTop: '1px solid #2d4a5c' }}>
+          <Box sx={{ px: 3, pb: 3, borderTop: `1px solid ${DS.outlineVariant}20` }}>
             {isGenerating && !localSummary ? (
-              /* Loading skeleton */
               <Box sx={{ pt: 2 }}>
-                <Skeleton variant="text" sx={{ bgcolor: '#243947', mb: 1 }} width="60%" />
-                <Skeleton
-                  variant="rectangular"
-                  sx={{ bgcolor: '#243947', borderRadius: 1 }}
-                  height={60}
-                />
-                <Skeleton variant="text" sx={{ bgcolor: '#243947', mt: 2, mb: 1 }} width="40%" />
-                <Skeleton variant="text" sx={{ bgcolor: '#243947' }} />
-                <Skeleton variant="text" sx={{ bgcolor: '#243947' }} />
-                <Skeleton variant="text" sx={{ bgcolor: '#243947' }} width="80%" />
+                <Skeleton variant="text" sx={{ bgcolor: `${DS.outlineVariant}30`, mb: 1 }} width="60%" />
+                <Skeleton variant="rectangular" sx={{ bgcolor: `${DS.outlineVariant}30`, borderRadius: 1 }} height={60} />
+                <Skeleton variant="text" sx={{ bgcolor: `${DS.outlineVariant}30`, mt: 2, mb: 1 }} width="40%" />
+                <Skeleton variant="text" sx={{ bgcolor: `${DS.outlineVariant}30` }} />
+                <Skeleton variant="text" sx={{ bgcolor: `${DS.outlineVariant}30` }} />
+                <Skeleton variant="text" sx={{ bgcolor: `${DS.outlineVariant}30` }} width="80%" />
               </Box>
             ) : localSummary ? (
-              /* Summary content */
-              <Box sx={{ pt: 2 }}>
-                {/* Overview */}
-                <Typography
-                  sx={{
-                    color: '#93b3c8',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                    mb: 1,
-                  }}
-                >
-                  Overview
-                </Typography>
-                <Typography sx={{ color: 'white', fontSize: '14px', lineHeight: 1.6, mb: 2.5 }}>
-                  {localSummary.overview}
-                </Typography>
+              <Box
+                sx={{
+                  pt: 2,
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                  gap: 3,
+                }}
+              >
+                {/* Left: Executive Overview */}
+                <Box>
+                  <Typography
+                    sx={{
+                      color: DS.outline,
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.15em',
+                      fontFamily: '"Inter", sans-serif',
+                      mb: 1.5,
+                    }}
+                  >
+                    Executive Overview
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: '"Newsreader", serif',
+                      fontSize: '1rem',
+                      lineHeight: 1.7,
+                      color: DS.onSurface,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    {localSummary.overview}
+                  </Typography>
 
-                {/* Key Points */}
-                {localSummary.keyPoints?.length > 0 && (
-                  <Box sx={{ mb: 2.5 }}>
-                    <Typography
-                      sx={{
-                        color: '#93b3c8',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        mb: 1,
-                      }}
-                    >
-                      Key Points
-                    </Typography>
-                    {localSummary.keyPoints.map((point, i) => (
-                      <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: 0.75 }}>
-                        <Typography
-                          sx={{ color: '#1993e5', fontSize: '14px', flexShrink: 0, mt: '1px' }}
-                        >
-                          •
-                        </Typography>
-                        <Typography sx={{ color: 'white', fontSize: '14px', lineHeight: 1.5 }}>
-                          {point}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
+                  {localSummary.keyPoints?.length > 0 && (
+                    <Box sx={{ mt: 2.5 }}>
+                      <Typography
+                        sx={{
+                          color: DS.outline,
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.15em',
+                          fontFamily: '"Inter", sans-serif',
+                          mb: 1.5,
+                        }}
+                      >
+                        Key Points
+                      </Typography>
+                      {localSummary.keyPoints.map((point, i) => (
+                        <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: 1 }}>
+                          <Typography sx={{ color: DS.primary, fontSize: '14px', flexShrink: 0, mt: '2px', fontFamily: '"Inter", sans-serif' }}>•</Typography>
+                          <Typography sx={{ color: DS.onSurface, fontFamily: '"Inter", sans-serif', fontSize: '14px', lineHeight: 1.5 }}>
+                            {point}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+                </Box>
 
-                {/* Action Items */}
+                {/* Right: Action Items */}
                 {localSummary.actionItems?.length > 0 && (
                   <Box>
                     <Typography
                       sx={{
-                        color: '#93b3c8',
-                        fontSize: '12px',
-                        fontWeight: 'bold',
+                        color: DS.outline,
+                        fontSize: '10px',
+                        fontWeight: 700,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
-                        mb: 1,
+                        letterSpacing: '0.15em',
+                        fontFamily: '"Inter", sans-serif',
+                        mb: 1.5,
                       }}
                     >
                       Action Items
                     </Typography>
                     {localSummary.actionItems.map((item, i) => (
-                      <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: 0.75 }}>
-                        <Typography
-                          sx={{ color: '#93b3c8', fontSize: '14px', flexShrink: 0, mt: '1px' }}
-                        >
-                          ☐
-                        </Typography>
-                        <Typography sx={{ color: 'white', fontSize: '14px', lineHeight: 1.5 }}>
+                      <Box key={i} sx={{ display: 'flex', gap: 1.5, mb: 1.5 }}>
+                        <CheckCircleIcon sx={{ color: DS.primary, fontSize: '18px', flexShrink: 0, mt: '1px' }} />
+                        <Typography sx={{ color: DS.onSurface, fontFamily: '"Inter", sans-serif', fontSize: '14px', lineHeight: 1.5 }}>
                           {item}
                         </Typography>
                       </Box>
@@ -246,12 +260,13 @@ const TranscriptionSummary: React.FC<TranscriptionSummaryProps> = ({
                 )}
               </Box>
             ) : (
-              /* Empty state */
               <Box sx={{ pt: 2, textAlign: 'center', py: 3 }}>
                 {error && (
-                  <Typography sx={{ color: '#ff6b6b', fontSize: '13px', mb: 1 }}>{error}</Typography>
+                  <Typography sx={{ color: DS.error, fontFamily: '"Inter", sans-serif', fontSize: '13px', mb: 1 }}>
+                    {error}
+                  </Typography>
                 )}
-                <Typography sx={{ color: '#4a6070', fontSize: '14px' }}>
+                <Typography sx={{ color: DS.onSurfaceVariant, fontFamily: '"Newsreader", serif', fontSize: '1rem', fontStyle: 'italic' }}>
                   Click "Generate" to create an AI summary of this transcription.
                 </Typography>
               </Box>

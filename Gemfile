@@ -52,6 +52,8 @@ gem 'bootsnap', require: false
 
 # Generate text with ChatGPT, transcribe or translate audio with Whisper, create images with DALL·E
 gem 'ruby-openai'
+gem 'assemblyai'
+gem 'stripe', '~> 12.0'
 
 # Env keys
 gem 'figaro'
@@ -83,6 +85,8 @@ group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem 'debug', platforms: %i[mri mingw x64_mingw]
   gem 'faker'
+  gem 'rspec-rails', '~> 6.1'
+  gem 'factory_bot_rails', '~> 6.4'
 end
 
 gem 'rack-cors', require: 'rack/cors'
@@ -104,6 +108,7 @@ group :test do
   gem 'capybara'
   gem 'selenium-webdriver'
   gem 'webdrivers'
+  gem 'shoulda-matchers', '~> 6.0'
 end
 
 gem 'tailwindcss-rails', '~> 2.0'
