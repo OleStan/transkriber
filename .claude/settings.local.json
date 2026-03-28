@@ -30,7 +30,11 @@
       "Bash(lsof:*)",
       "Bash(pgrep:*)",
       "Bash(wc:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "mcp__stitch__create_project",
+      "mcp__stitch__update_design_system",
+      "mcp__stitch__generate_screen_from_text",
+      "mcp__stitch__list_projects"
     ],
     "deny": [],
     "ask": []

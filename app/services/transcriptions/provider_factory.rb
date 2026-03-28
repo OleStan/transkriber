@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 
 class Transcriptions::ProviderFactory
-  PROVIDERS = %w[openai google].freeze
+  PROVIDERS = %w[openai google assemblyai].freeze
 
   def self.for(provider_name = nil)
     name = (provider_name || ENV.fetch('TRANSCRIPTION_PROVIDER', 'openai')).to_s.downcase
 
     case name
-    when 'openai' then OpenAiAdapter
-    when 'google' then GoogleAdapter
+    when 'openai'     then OpenAiAdapter
+    when 'google'     then GoogleAdapter
+    when 'assemblyai' then AssemblyAiAdapter
     else
       raise ArgumentError, "Unknown transcription provider: #{name}. Valid providers: #{PROVIDERS.join(', ')}"
     end
@@ -65,5 +66,17 @@ class Transcriptions::ProviderFactory
       'ar' => 'ar-SA',
       'tr' => 'tr-TR',
     }.freeze
+  end
+
+  # ── AssemblyAI adapter ───────────────────────────────────────────────────────
+  module AssemblyAiAdapter
+    def self.call(blob, response_format, language: nil, progress_callback: nil)
+      AssemblyAiTranscriptionService.call(
+        blob,
+        response_format,
+        language: language,
+        progress_callback: progress_callback
+      )
+    end
   end
 end
