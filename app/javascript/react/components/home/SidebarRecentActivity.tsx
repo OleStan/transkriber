@@ -4,6 +4,7 @@ import Typography from '@mui/material/Typography';
 import Skeleton from '@mui/material/Skeleton';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useGetTranscriptionsQuery } from '../../redux/resourcesApi/transcriptions/transcriptionsSlice';
+import { useGetUsageQuery } from '../../redux/resourcesApi/billing/billingSlice';
 import { Transcription } from '../../redux/resourcesApi/transcriptions/types';
 import { DS } from '../../theme';
 
@@ -136,6 +137,13 @@ const SidebarRecentActivity: React.FC = () => {
   const navigate = useNavigate();
   const { data, isLoading } = useGetTranscriptionsQuery({ page: 1 });
   const recent = data?.transcriptions?.slice(0, 5) ?? [];
+  const { data: usage } = useGetUsageQuery();
+
+  const minutesUsed = usage?.currentPeriod?.minutesUsed ?? 0;
+  const minutesLimit = usage?.currentPeriod?.minutesLimit ?? 60;
+  const unlimited = usage?.currentPeriod?.unlimited ?? false;
+  const planName = usage?.plan?.name ?? 'Free';
+  const usagePct = unlimited ? 0 : Math.min((minutesUsed / minutesLimit) * 100, 100);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 240 }}>
@@ -224,26 +232,18 @@ const SidebarRecentActivity: React.FC = () => {
           border: `1px solid ${DS.outlineVariant}1a`,
         }}
       >
-        <Typography
-          sx={{
-            mb: 0.5,
-            color: DS.onSurface,
-            fontFamily: '"Manrope", sans-serif',
-            fontWeight: 700,
-            fontSize: '14px',
-          }}
-        >
-          Workspace Usage
-        </Typography>
-        <Typography
-          sx={{
-            color: DS.onSurfaceVariant,
-            fontFamily: '"Inter", sans-serif',
-            fontSize: '11px',
-            mb: 1.5,
-          }}
-        >
-          {recent.length} / 100 transcriptions used
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 0.5 }}>
+          <Typography sx={{ color: DS.onSurface, fontFamily: '"Manrope", sans-serif', fontWeight: 700, fontSize: '14px' }}>
+            Workspace Usage
+          </Typography>
+          <Typography sx={{ color: DS.primary, fontFamily: '"Inter", sans-serif', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {planName}
+          </Typography>
+        </Box>
+        <Typography sx={{ color: DS.onSurfaceVariant, fontFamily: '"Inter", sans-serif', fontSize: '11px', mb: 1.5 }}>
+          {unlimited
+            ? `${minutesUsed.toFixed(0)} min used (unlimited)`
+            : `${minutesUsed.toFixed(0)} / ${minutesLimit} min used`}
         </Typography>
 
         {/* Progress bar */}
@@ -253,7 +253,7 @@ const SidebarRecentActivity: React.FC = () => {
               height: '100%',
               borderRadius: '9999px',
               background: DS.primaryGradient,
-              width: `${Math.min((recent.length / 100) * 100, 100)}%`,
+              width: `${usagePct}%`,
               transition: 'width 0.5s ease',
             }}
           />
@@ -261,6 +261,7 @@ const SidebarRecentActivity: React.FC = () => {
 
         <Box
           component="button"
+          onClick={() => navigate('/settings?section=billing')}
           sx={{
             width: '100%',
             py: 1,
@@ -276,7 +277,7 @@ const SidebarRecentActivity: React.FC = () => {
             '&:hover': { opacity: 0.85 },
           }}
         >
-          Upgrade Plan
+          {planName === 'Free' ? 'Upgrade Plan' : 'Manage Plan'}
         </Box>
       </Box>
     </Box>

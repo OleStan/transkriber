@@ -52,6 +52,8 @@ gem 'bootsnap', require: false
 
 # Generate text with ChatGPT, transcribe or translate audio with Whisper, create images with DALL·E
 gem 'ruby-openai'
+gem 'assemblyai'
+gem 'stripe', '~> 12.0'
 
 # Env keys
 gem 'figaro'

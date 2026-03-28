@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -24,6 +24,8 @@ import {
 import { useNotification } from '../../contexts/NotificationContext';
 import { useUpdateProfileMutation, useGetCurrentUserQuery, useUpdatePasswordMutation } from '../../redux/resourcesApi/auth/authSlice';
 import { DS } from '../../theme';
+import BillingTab from './BillingTab';
+import UsageTab from './UsageTab';
 
 const bottomBorderInputSx = {
   mb: 3,
@@ -65,8 +67,8 @@ const NAV_ITEMS = [
   { icon: PersonIcon, label: 'Profile', key: 'profile', enabled: true },
   { icon: LockIcon, label: 'Security', key: 'security', enabled: true },
   { icon: TeamIcon, label: 'Team', key: 'team', enabled: false },
-  { icon: UsageIcon, label: 'Usage', key: 'usage', enabled: false },
-  { icon: BillingIcon, label: 'Billing', key: 'billing', enabled: false },
+  { icon: UsageIcon, label: 'Usage', key: 'usage', enabled: true },
+  { icon: BillingIcon, label: 'Billing', key: 'billing', enabled: true },
   { icon: ApiIcon, label: 'API', key: 'api', enabled: false },
   { icon: WebhookIcon, label: 'Webhooks', key: 'webhooks', enabled: false },
 ];
@@ -87,7 +89,18 @@ const Settings: React.FC = () => {
   const [updateProfile] = useUpdateProfileMutation();
   const [updatePassword] = useUpdatePasswordMutation();
   const { data: currentUserData } = useGetCurrentUserQuery();
-  const [activeSection, setActiveSection] = useState<string>('profile');
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialSection = searchParams.get('section') || 'profile';
+  const [activeSection, setActiveSection] = useState<string>(initialSection);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('billing') === 'success') {
+      showNotification('Subscription activated successfully!', 'success');
+      setActiveSection('billing');
+      window.history.replaceState({}, '', '/settings?section=billing');
+    }
+  }, []);
 
   const currentUserName = currentUserData?.user
     ? [currentUserData.user.first_name, currentUserData.user.last_name].filter(Boolean).join(' ')
@@ -262,6 +275,7 @@ const Settings: React.FC = () => {
                 cursor: 'pointer',
                 '&:hover': { opacity: 0.9 },
               }}
+              onClick={() => setActiveSection('billing')}
             >
               Upgrade Plan
             </Box>
@@ -280,8 +294,12 @@ const Settings: React.FC = () => {
               mb: 4,
             }}
           >
-            {activeSection === 'profile' ? 'Profile' : 'Security'}
+            {{ profile: 'Profile', security: 'Security', billing: 'Billing', usage: 'Usage' }[activeSection] ?? activeSection.charAt(0).toUpperCase() + activeSection.slice(1)}
           </Typography>
+
+          {activeSection === 'billing' && <BillingTab onBillingSuccess={() => setActiveSection('billing')} />}
+
+          {activeSection === 'usage' && <UsageTab />}
 
           {activeSection === 'profile' && sectionCard(
             <>

@@ -10,6 +10,7 @@ class Transcriptions::Transcribe < ActiveInteractor::Base
   include AudioTranscriptionHelper
 
   after_perform :ensure_progress_completion, if: -> { context.success? }
+  after_perform :record_usage, if: -> { context.success? && context.transcription.account.present? }
   after_rollback :handle_failure
 
   def perform
@@ -76,6 +77,13 @@ class Transcriptions::Transcribe < ActiveInteractor::Base
     Rails.logger.error("Error transcribing audio: #{error_message}")
   end
   
+  def record_usage
+    Billing::RecordUsage.perform(
+      account: transcription.account,
+      transcription: transcription
+    )
+  end
+
   # Ensure we always set to 100% if successful
   def ensure_progress_completion
     transcription.update_progress(100, 'completed') unless transcription.progress == 100

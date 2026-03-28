@@ -9,6 +9,9 @@ Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
   mount ActionCable.server => '/cable'
 
+  # Stripe webhooks — must be before pages catch-all, no Devise auth
+  post '/webhooks/stripe', to: 'stripe/webhooks#create'
+
   mount Sidekiq::Web => '/sidekiq'
 
   # Defines the root path route ("/")
@@ -41,6 +44,13 @@ Rails.application.routes.draw do
     resource :user, only: [] do
       patch :update_profile
       patch :update_password
+    end
+
+    scope :billing do
+      get  'plans',         to: 'billing#plans'
+      post 'subscriptions', to: 'billing#create_checkout_session'
+      post 'portal',        to: 'billing#create_portal_session'
+      get  'usage',         to: 'billing#usage'
     end
   end
 
