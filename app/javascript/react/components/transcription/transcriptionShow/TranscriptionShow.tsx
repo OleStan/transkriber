@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useLoaderData } from 'react-router-dom';
+import { useLoaderData, useNavigate } from 'react-router-dom';
 import { useGetTranscriptionQuery, useUpdateTranscriptionMutation } from '../../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 import AudioPlayer from '../../player/AudioPlayer';
 import useAdjustableTranscription from '../../../hooks/useAdjustableTranscription';
@@ -10,36 +10,29 @@ import AdjustSegmentSizeSlider from './AdjustSegmentSizeSlider';
 import useAudioStore from '../../../stores/useAudioStore';
 import TranscriptionEditor from './TranscriptionEditor';
 import TranscriptionSummary, { SummaryData } from './TranscriptionSummary';
-import { Box, LinearProgress, Typography, Stack, Alert, Button, IconButton, CircularProgress, Snackbar, Menu, MenuItem, ListItemText, Chip } from '@mui/material';
+import {
+  Box, LinearProgress, Typography, Stack, Alert, Button, IconButton,
+  CircularProgress, Snackbar, Menu, MenuItem, ListItemText,
+} from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
   Cancel as CancelIcon,
-  Error as ErrorIcon,
   Download as DownloadIcon,
   ContentCopy as ContentCopyIcon,
   Edit as EditIcon,
+  ChevronRight as ChevronRightIcon,
+  Share as ShareIcon,
 } from '@mui/icons-material';
-
 import { LoaderFunctionArgs } from 'react-router-dom';
 import { useNotification } from '../../../contexts/NotificationContext';
+import StatusBadge from '../../shared/StatusBadge';
+import { DS } from '../../../theme';
 
-// Type definitions for the transcription data
 interface ITranscriptionSegment {
   timestamp: string;
   text: string;
   start: number;
   end: number;
-}
-
-interface TranscriptionDetails {
-  id: string;
-  status: string;
-  audioFilename: string;
-  audioTranscriptionPath: string;
-  duration: number;
-  progress?: number;
-  error_message?: string;
-  transcriptions: ITranscriptionSegment[] | string;
 }
 
 interface TranscriptionDetailsResponse {
@@ -58,13 +51,9 @@ interface LoaderData {
   id: string;
 }
 
-export function loader({
-  params,
-}: LoaderFunctionArgs) {
+export function loader({ params }: LoaderFunctionArgs) {
   return { id: params.id };
 }
-
-
 
 const EXPORT_FORMATS: { label: string; format: 'txt' | 'srt' | 'vtt' }[] = [
   { label: 'Plain text (.txt)', format: 'txt' },
@@ -72,12 +61,26 @@ const EXPORT_FORMATS: { label: string; format: 'txt' | 'srt' | 'vtt' }[] = [
   { label: 'Web captions (.vtt)', format: 'vtt' },
 ];
 
+const ghostButtonSx = {
+  border: `1px solid ${DS.outlineVariant}30`,
+  color: DS.primary,
+  borderRadius: '12px',
+  px: 2,
+  py: 0.75,
+  fontSize: '13px',
+  fontFamily: '"Inter", sans-serif',
+  '&:hover': { bgcolor: DS.surface, borderColor: DS.outlineVariant },
+  '&:disabled': { color: DS.outline, borderColor: `${DS.outlineVariant}20` },
+};
+
 const TranscriptionShow = () => {
   const { id } = useLoaderData() as LoaderData;
+  const navigate = useNavigate();
   const [summaryPollingInterval, setSummaryPollingInterval] = useState(0);
   const { data: transcription, isLoading } = useGetTranscriptionQuery(Number(id), {
     pollingInterval: summaryPollingInterval,
-  }) as { data: TranscriptionDetailsResponse | undefined, isLoading: boolean };
+  }) as { data: TranscriptionDetailsResponse | undefined; isLoading: boolean };
+
   const [transcriptionState, setTranscriptionState] = useState({
     text: '',
     isCompleted: false,
@@ -90,39 +93,26 @@ const TranscriptionShow = () => {
   const [copied, setCopied] = useState(false);
   const [downloadMenuAnchor, setDownloadMenuAnchor] = useState<null | HTMLElement>(null);
 
-  // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editedSegments, setEditedSegments] = useState<ITranscriptionSegment[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Summary state
   const [currentSummary, setCurrentSummary] = useState<SummaryData | null>(null);
 
-  // Notification hook
   const { showNotification } = useNotification();
-
-  // Store hooks
   const setSeek = useAudioStore((state) => state.setSeek);
-
-  // Edit mutation
   const [updateTranscription] = useUpdateTranscriptionMutation();
-  
-  // Use our enhanced ActionCable hook
-  const { latestMessage, messages, cancelTranscription } = useActionCable('TranscriptionChannel', id);
+  const { latestMessage, cancelTranscription } = useActionCable('TranscriptionChannel', id);
 
-  // Handle cancel button click
   const handleCancel = useCallback(() => {
     if (window.confirm('Are you sure you want to cancel this transcription?')) {
       cancelTranscription();
     }
   }, [cancelTranscription]);
 
-  // Edit mode handlers
   const handleEnterEdit = useCallback(() => {
-    const segs = Array.isArray(transcription?.transcriptions)
-      ? transcription.transcriptions
-      : [];
+    const segs = Array.isArray(transcription?.transcriptions) ? transcription.transcriptions : [];
     setEditedSegments(segs as ITranscriptionSegment[]);
     setIsEditing(true);
     setHasUnsavedChanges(false);
@@ -137,9 +127,9 @@ const TranscriptionShow = () => {
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      const transcriptionText = editedSegments.map(s => s.text).join(' ');
+      const transcriptionText = editedSegments.map((s) => s.text).join(' ');
       const transcriptionJson = {
-        segments: editedSegments.map(s => ({
+        segments: editedSegments.map((s) => ({
           id: (s as any).id,
           text: s.text,
           start: s.start,
@@ -147,14 +137,10 @@ const TranscriptionShow = () => {
           timestamp: s.timestamp,
         })),
       };
-      await updateTranscription({
-        id: Number(id),
-        transcription: transcriptionText,
-        transcriptionJson,
-      }).unwrap();
+      await updateTranscription({ id: Number(id), transcription: transcriptionText, transcriptionJson }).unwrap();
       setIsEditing(false);
       setHasUnsavedChanges(false);
-    } catch (err) {
+    } catch {
       showNotification('Failed to save changes. Please try again.', 'danger');
     } finally {
       setIsSaving(false);
@@ -166,33 +152,23 @@ const TranscriptionShow = () => {
     setHasUnsavedChanges(true);
   }, []);
 
-  // Unsaved changes guard on navigation/close
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (hasUnsavedChanges) {
-        e.preventDefault();
-        e.returnValue = '';
-      }
+      if (hasUnsavedChanges) { e.preventDefault(); e.returnValue = ''; }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  // Ctrl+Enter to save when editing
   useEffect(() => {
     if (!isEditing) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'Enter') {
-        handleSave();
-      }
-    };
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.ctrlKey && e.key === 'Enter') handleSave(); };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isEditing, handleSave]);
 
   useEffect(() => {
     if (!latestMessage) return;
-
     if (latestMessage.summary) {
       const s = latestMessage.summary as any;
       setCurrentSummary({
@@ -200,13 +176,9 @@ const TranscriptionShow = () => {
         keyPoints: s.key_points ?? s.keyPoints ?? [],
         actionItems: s.action_items ?? s.actionItems ?? [],
       });
-      setSummaryPollingInterval(0); // stop polling — summary arrived via WebSocket
+      setSummaryPollingInterval(0);
     }
-
-    if (latestMessage.summary_error) {
-      setSummaryPollingInterval(0); // stop polling on permanent failure
-    }
-
+    if (latestMessage.summary_error) setSummaryPollingInterval(0);
     setTranscriptionState((prevState) => ({
       text: latestMessage.transcription_json || prevState.text,
       isCompleted: latestMessage.status === 'completed' || latestMessage.status === 'failed' || prevState.isCompleted,
@@ -217,64 +189,41 @@ const TranscriptionShow = () => {
     }));
   }, [latestMessage]);
 
-  // Sync summary from fetched transcription data (also used by polling)
   useEffect(() => {
     if (transcription?.summary) {
       setCurrentSummary(transcription.summary);
-      setSummaryPollingInterval(0); // stop polling — summary arrived via REST
+      setSummaryPollingInterval(0);
     }
   }, [transcription?.summary]);
 
-  // Determine what status text to display
   const getStatusText = useCallback(() => {
     switch (transcriptionState.status) {
-      case 'uploading':
-        return 'Uploading audio file...';
-      case 'processing':
-        return 'Processing audio...';
-      case 'in_progress':
-        return 'Preparing for transcription...';
-      case 'transcribing':
-        return 'Transcribing audio...';
-      case 'post_processing':
-        return 'Finalizing transcription...';
-      case 'completed':
-        return 'Transcription completed!';
-      case 'failed':
-        return 'Transcription failed';
-      case 'cancelled':
-        return 'Transcription cancelled';
-      default:
-        return 'Please wait while we process your transcription';
+      case 'uploading': return 'Uploading audio file...';
+      case 'processing': return 'Processing audio...';
+      case 'in_progress': return 'Preparing for transcription...';
+      case 'transcribing': return 'Transcribing audio...';
+      case 'post_processing': return 'Finalizing transcription...';
+      case 'completed': return 'Transcription completed!';
+      case 'failed': return 'Transcription failed';
+      case 'cancelled': return 'Transcription cancelled';
+      default: return 'Please wait while we process your transcription';
     }
   }, [transcriptionState.status]);
 
   const transcriptionSegments = useAdjustableTranscription(
     (transcription?.transcriptions || transcriptionState.text || []) as ITranscriptionSegment[]
   );
-  
-  // Copy functionality
+
   const transcriptWithTimestamps = useMemo(
     () =>
       transcriptionSegments
-        ?.map(
-          (t) =>
-            `${t.timestampOfChunk} ${t.segments
-              .map((s) => s.text)
-              .join('')
-              .trim()}`
-        )
+        ?.map((t) => `${t.timestampOfChunk} ${t.segments.map((s) => s.text).join('').trim()}`)
         .join('\n') ?? '',
     [transcriptionSegments]
   );
-  
-  const handleDownloadButtonClick = (event: React.MouseEvent<HTMLElement>) => {
-    setDownloadMenuAnchor(event.currentTarget);
-  };
 
-  const handleDownloadMenuClose = () => {
-    setDownloadMenuAnchor(null);
-  };
+  const handleDownloadButtonClick = (event: React.MouseEvent<HTMLElement>) => setDownloadMenuAnchor(event.currentTarget);
+  const handleDownloadMenuClose = () => setDownloadMenuAnchor(null);
 
   const handleExport = (format: 'txt' | 'srt' | 'vtt') => {
     const link = document.createElement('a');
@@ -290,515 +239,410 @@ const TranscriptionShow = () => {
     try {
       await navigator.clipboard.writeText(transcriptWithTimestamps);
       setCopied(true);
-    } catch (err) {
-      console.error('Copy failed', err);
-    }
+    } catch { /* ignore */ }
   }, [transcriptWithTimestamps]);
-  
-  const handleTimestampClick = useCallback((startTime: number) => {
-    setSeek(startTime);
-  }, [setSeek]);
 
-  if (isLoading || !transcription) {
-    return <TranscriptionShowSkeleton />;
-  }
+  const handleTimestampClick = useCallback((startTime: number) => setSeek(startTime), [setSeek]);
 
-  // Determine if we should show the progress UI
-  const showInProgress = (
+  if (isLoading || !transcription) return <TranscriptionShowSkeleton />;
+
+  const showInProgress =
     ['in_progress', 'pending', 'uploading', 'processing', 'transcribing', 'post_processing'].includes(
       transcriptionState.status || transcription.status
     ) &&
     !transcriptionState.isCompleted &&
-    !transcription.transcriptions
-  );
+    !transcription.transcriptions;
+
+  const displayStatus = transcriptionState.status || transcription.status;
 
   return (
-    <Box
-      sx={{
-        bgcolor: '#111b22',
-        minHeight: '100vh',
-        color: 'white',
-        fontFamily: '"Spline Sans", "Noto Sans", sans-serif'
-      }}
-    >
-      {/* Main Content Container */}
-      <Box sx={{ gap: 1, px: 6, flex: 1, justifyContent: 'center', py: 5, maxWidth: '100%' }}>
-        {/* Left Column - Controls */}
-        <Box sx={{ 
-          width: '320px', 
-          mr: 4, 
-          display: 'inline-block', 
-          verticalAlign: 'top',
-          position: 'sticky',
-          top: '20px',
-          alignSelf: 'flex-start'
-        }}>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              fontWeight: 'bold', 
-              px: 4, 
-              pb: 3, 
-              pt: 5,
-              color: 'white',
-              fontSize: '22px'
+    <Box sx={{ bgcolor: DS.bg, minHeight: '100vh', color: DS.onSurface, pt: '64px' }}>
+      <Box sx={{ px: { xs: 2, sm: 4, md: 6 }, py: 4, maxWidth: '1200px', mx: 'auto' }}>
+        {/* Breadcrumb */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
+          <Typography
+            onClick={() => navigate('/transcriptions')}
+            sx={{
+              color: DS.outline,
+              fontSize: '12px',
+              cursor: 'pointer',
+              fontFamily: '"Inter", sans-serif',
+              '&:hover': { color: DS.onSurface },
             }}
           >
-            Transcription
+            Library
           </Typography>
-          
-          {/* Chunk Duration Slider */}
-          <Box sx={{ p: 4 }}>
-            <Typography sx={{ color: 'white', fontSize: '16px', fontWeight: 'medium', mb: 3 }}>
-              Chunk Duration
-            </Typography>
-            <Box sx={{ 
-              '& .MuiSlider-root': {
-                color: '#1993e5'
-              },
-              '& .MuiSvgIcon-root': {
-                color: '#93b3c8'
-              }
-            }}>
-              <AdjustSegmentSizeSlider />
-            </Box>
-          </Box>
-          
-          {/* Action Buttons */}
-          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-            <Box sx={{ display: 'flex', flex: 1, gap: 3, maxWidth: '480px', flexDirection: 'column', px: 4, py: 3 }}>
-              {!isEditing ? (
-                <Button
-                  onClick={handleEnterEdit}
-                  disabled={!Array.isArray(transcription?.transcriptions) || transcription.transcriptions.length === 0}
-                  startIcon={<EditIcon />}
-                  sx={{
-                    minWidth: '84px',
-                    height: '40px',
-                    px: 4,
-                    bgcolor: '#243947',
-                    color: 'white',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    borderRadius: '20px',
-                    textTransform: 'none',
-                    '&:hover': {
-                      bgcolor: '#2d4350'
-                    },
-                    '&:disabled': {
-                      bgcolor: '#1a2832',
-                      color: '#93b3c8'
-                    }
-                  }}
-                >
-                  Edit
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    startIcon={isSaving ? <CircularProgress size={16} sx={{ color: 'white' }} /> : undefined}
-                    sx={{
-                      minWidth: '84px',
-                      height: '40px',
-                      px: 4,
-                      bgcolor: '#1993e5',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      borderRadius: '20px',
-                      textTransform: 'none',
-                      '&:hover': {
-                        bgcolor: '#1478c7'
-                      },
-                      '&:disabled': {
-                        bgcolor: '#1a2832',
-                        color: '#93b3c8'
-                      }
-                    }}
-                  >
-                    {isSaving ? 'Saving...' : 'Save changes'}
-                  </Button>
-                  <Button
-                    onClick={handleDiscardEdit}
-                    disabled={isSaving}
-                    variant="text"
-                    sx={{
-                      minWidth: '84px',
-                      height: '40px',
-                      px: 4,
-                      color: '#93b3c8',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      borderRadius: '20px',
-                      textTransform: 'none',
-                      '&:hover': {
-                        bgcolor: '#1a2832',
-                        color: 'white'
-                      }
-                    }}
-                  >
-                    Discard
-                  </Button>
-                </>
-              )}
-              <Button
-                onClick={handleCopy}
-                disabled={!transcriptWithTimestamps}
-                sx={{
-                  minWidth: '84px',
-                  height: '40px',
-                  px: 4,
-                  bgcolor: '#243947',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  borderRadius: '20px',
-                  textTransform: 'none',
-                  '&:hover': {
-                    bgcolor: '#2d4350'
-                  },
-                  '&:disabled': {
-                    bgcolor: '#1a2832',
-                    color: '#93b3c8'
-                  }
-                }}
-              >
-                Copy
-              </Button>
-              <Button
-                onClick={handleDownloadButtonClick}
-                sx={{
-                  minWidth: '84px',
-                  height: '40px',
-                  px: 4,
-                  bgcolor: '#1993e5',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  borderRadius: '20px',
-                  textTransform: 'none',
-                  '&:hover': {
-                    bgcolor: '#1478c7'
-                  }
-                }}
-              >
-                Download
-              </Button>
-              <Menu
-                anchorEl={downloadMenuAnchor}
-                open={Boolean(downloadMenuAnchor)}
-                onClose={handleDownloadMenuClose}
-                PaperProps={{
-                  sx: {
-                    bgcolor: '#1f282e',
-                    border: '1px solid #3d505c',
-                    borderRadius: '8px',
-                    color: 'white',
-                  }
-                }}
-              >
-                {EXPORT_FORMATS.map(({ label, format }) => (
-                  <MenuItem
-                    key={format}
-                    onClick={() => handleExport(format)}
-                    sx={{
-                      fontSize: '14px',
-                      color: '#9db1be',
-                      '&:hover': {
-                        bgcolor: '#2b3840',
-                        color: 'white',
-                      }
-                    }}
-                  >
-                    <ListItemText primary={label} />
-                  </MenuItem>
-                ))}
-              </Menu>
-            </Box>
-          </Box>
-          
-          {/* Error States */}
-          {transcriptionState.error && (
-            <Box sx={{ px: 4, py: 2 }}>
-              <Alert 
-                severity="error"
-                sx={{ 
-                  bgcolor: '#2d1b1b',
-                  color: '#ff6b6b',
-                  '& .MuiAlert-icon': { color: '#ff6b6b' }
-                }}
-                action={
-                  <Button 
-                    size="small"
-                    onClick={() => window.location.reload()}
-                    sx={{ color: '#ff6b6b' }}
-                  >
-                    Retry
-                  </Button>
-                }
-              >
-                {transcriptionState.error}
-              </Alert>
-            </Box>
-          )}
-          
-          {transcriptionState.cancelled && (
-            <Box sx={{ px: 4, py: 2 }}>
-              <Alert 
-                severity="info"
-                sx={{ 
-                  bgcolor: '#1b2632',
-                  color: '#93b3c8',
-                  '& .MuiAlert-icon': { color: '#93b3c8' }
-                }}
-              >
-                This transcription was cancelled. You can upload a new file to try again.
-              </Alert>
-            </Box>
-          )}
+          <ChevronRightIcon sx={{ color: DS.outline, fontSize: '16px' }} />
+          <Typography sx={{ color: DS.outline, fontSize: '12px', fontFamily: '"Inter", sans-serif' }}>
+            {transcription.audioFilename || `Transcription #${id}`}
+          </Typography>
         </Box>
-        
-        {/* Right Column - Main Content */}
-        <Box sx={{ maxWidth: '960px', flex: 1, display: 'inline-block', verticalAlign: 'top' }}>
-          {/* Audio Player Card */}
-          <Box sx={{ px: 4, py: 3 }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, borderRadius: '12px', bgcolor: '#243947', px: 4, py: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <Box
-                  sx={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '8px',
-                    bgcolor: '#345165',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}
-                >
-                  <PlayArrowIcon sx={{ color: 'white', fontSize: '24px' }} />
-                </Box>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography 
-                    sx={{ 
-                      color: 'white', 
-                      fontSize: '16px', 
-                      fontWeight: 'bold',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {transcription.audioFilename}
-                  </Typography>
-                  <Typography 
-                    sx={{ 
-                      color: '#93b3c8', 
-                      fontSize: '14px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    Audio File
-                  </Typography>
-                </Box>
-              </Box>
-              
-              {/* Audio Player */}
-              <AudioPlayer src={transcription.audioTranscriptionPath} />
-            </Box>
-          </Box>
-          
-          {/* Transcription Title */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, px: 4, pb: 3, pt: 5 }}>
+
+        {/* Title row */}
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 3, gap: 2, flexWrap: 'wrap' }}>
+          <Box>
             <Typography
-              variant="h5"
               sx={{
-                fontWeight: 'bold',
-                color: 'white'
+                fontFamily: '"Manrope", sans-serif',
+                fontWeight: 800,
+                fontSize: { xs: '1.5rem', md: '2rem' },
+                color: DS.onSurface,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.2,
+                mb: 1,
               }}
             >
-              Transcription
+              {transcription.audioFilename || `Transcription #${id}`}
             </Typography>
-            {isEditing && (
-              <Chip
-                label="Editing"
-                color="warning"
-                size="small"
-                sx={{ fontWeight: 'bold' }}
-              />
-            )}
+            <StatusBadge status={displayStatus} />
           </Box>
-          
-          {/* AI Summary Panel — show when transcription is completed */}
-          {transcription?.status === 'completed' && (
-            <TranscriptionSummary
-              transcriptionId={Number(id)}
-              summary={currentSummary}
-              transcriptionText={
-                typeof transcription?.transcriptions === 'string'
-                  ? transcription.transcriptions
-                  : Array.isArray(transcription?.transcriptions)
-                  ? transcription.transcriptions.map((s) => s.text).join(' ')
-                  : null
-              }
-              onGenerateStart={() => setSummaryPollingInterval(3000)}
-            />
-          )}
 
-          {/* Progress State */}
-          {showInProgress && !transcriptionState.cancelled && !transcriptionState.error ? (
-            <Box sx={{ px: 4, py: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Typography sx={{ color: 'white', fontSize: '18px', fontWeight: 'bold' }}>
-                  {getStatusText()}
-                </Typography>
-                <IconButton 
-                  onClick={handleCancel}
-                  title="Cancel transcription"
-                  sx={{ color: '#93b3c8' }}
+          {/* Action buttons */}
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+            {!isEditing ? (
+              <Button
+                onClick={handleEnterEdit}
+                disabled={!Array.isArray(transcription?.transcriptions) || transcription.transcriptions.length === 0}
+                startIcon={<EditIcon sx={{ fontSize: '16px !important' }} />}
+                variant="outlined"
+                sx={ghostButtonSx}
+              >
+                Edit
+              </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  startIcon={isSaving ? <CircularProgress size={14} sx={{ color: DS.onPrimary }} /> : undefined}
+                  sx={{
+                    background: DS.primaryGradient,
+                    color: DS.onPrimary,
+                    borderRadius: '12px',
+                    px: 2,
+                    py: 0.75,
+                    fontSize: '13px',
+                    fontFamily: '"Inter", sans-serif',
+                    fontWeight: 700,
+                    '&:hover': { background: DS.primaryGradient, opacity: 0.9 },
+                  }}
                 >
-                  <CancelIcon />
-                </IconButton>
-              </Box>
-              
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <LinearProgress 
-                  variant="determinate"
-                  value={transcriptionState.progress} 
-                  sx={{ 
-                    flex: 1,
-                    height: 10, 
-                    borderRadius: 5,
-                    bgcolor: '#345165',
-                    '& .MuiLinearProgress-bar': {
-                      bgcolor: transcriptionState.progress > 90 ? '#4caf50' : '#1993e5'
-                    }
-                  }} 
-                />
-                <Typography sx={{ color: 'white', fontSize: '14px' }}>
-                  {transcriptionState.progress}%
-                </Typography>
-              </Box>
-              
-              <Alert 
-                severity="info"
-                sx={{ 
-                  bgcolor: '#1b2632',
-                  color: '#93b3c8',
-                  '& .MuiAlert-icon': { color: '#1993e5' }
+                  {isSaving ? 'Saving...' : 'Save changes'}
+                </Button>
+                <Button onClick={handleDiscardEdit} disabled={isSaving} variant="outlined" sx={ghostButtonSx}>
+                  Discard
+                </Button>
+              </>
+            )}
+
+            <Button
+              onClick={handleCopy}
+              disabled={!transcriptWithTimestamps}
+              startIcon={<ContentCopyIcon sx={{ fontSize: '16px !important' }} />}
+              variant="outlined"
+              sx={ghostButtonSx}
+            >
+              Copy
+            </Button>
+
+            <Button
+              onClick={handleDownloadButtonClick}
+              startIcon={<DownloadIcon sx={{ fontSize: '16px !important' }} />}
+              variant="outlined"
+              sx={ghostButtonSx}
+            >
+              Download
+            </Button>
+
+            <Button
+              startIcon={<ShareIcon sx={{ fontSize: '16px !important' }} />}
+              sx={{
+                background: DS.primaryGradient,
+                color: DS.onPrimary,
+                borderRadius: '12px',
+                px: 2,
+                py: 0.75,
+                fontSize: '13px',
+                fontFamily: '"Inter", sans-serif',
+                fontWeight: 700,
+                '&:hover': { background: DS.primaryGradient, opacity: 0.9 },
+              }}
+            >
+              Share
+            </Button>
+
+            <Menu
+              anchorEl={downloadMenuAnchor}
+              open={Boolean(downloadMenuAnchor)}
+              onClose={handleDownloadMenuClose}
+              PaperProps={{
+                sx: {
+                  bgcolor: DS.surfaceHigh,
+                  border: `1px solid ${DS.outlineVariant}33`,
+                  borderRadius: '12px',
+                },
+              }}
+            >
+              {EXPORT_FORMATS.map(({ label, format }) => (
+                <MenuItem
+                  key={format}
+                  onClick={() => handleExport(format)}
+                  sx={{
+                    fontSize: '13px',
+                    fontFamily: '"Inter", sans-serif',
+                    color: DS.onSurfaceVariant,
+                    '&:hover': { bgcolor: DS.surfaceBright, color: DS.onSurface },
+                  }}
+                >
+                  <ListItemText primary={label} />
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
+        </Box>
+
+        {/* Segment size controls */}
+        <Box
+          sx={{
+            bgcolor: DS.surfaceLow,
+            borderRadius: '12px',
+            p: 2,
+            mb: 3,
+            border: `1px solid ${DS.outlineVariant}1a`,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Typography sx={{ color: DS.onSurfaceVariant, fontSize: '12px', fontFamily: '"Inter", sans-serif', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>
+            Chunk size
+          </Typography>
+          <Box sx={{ '& .MuiSlider-root': { color: DS.primary }, '& .MuiSvgIcon-root': { color: DS.outline }, minWidth: 160 }}>
+            <AdjustSegmentSizeSlider />
+          </Box>
+        </Box>
+
+        {/* Audio Player Card */}
+        <Box
+          sx={{
+            bgcolor: DS.surfaceLow,
+            borderRadius: '16px',
+            border: `1px solid ${DS.outlineVariant}0d`,
+            p: 3,
+            mb: 3,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: '12px',
+                background: DS.primaryGradient,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <PlayArrowIcon sx={{ color: DS.onPrimary, fontSize: '24px' }} />
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                sx={{
+                  color: DS.onSurface,
+                  fontFamily: '"Inter", sans-serif',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {transcriptionState.status === 'transcribing' && (
-                  'Transcription is in progress. This may take a few minutes depending on the audio length.'
-                )}
-                {transcriptionState.status === 'uploading' && 'Uploading your audio file. Please wait...'}
-                {transcriptionState.status === 'processing' && 'Processing your audio file to prepare it for transcription...'}
-              </Alert>
-              
-              <TranscriptionSegmentsSkeleton />
+                {transcription.audioFilename}
+              </Typography>
+              <Typography sx={{ color: DS.outline, fontFamily: '"Inter", sans-serif', fontSize: '12px' }}>
+                Audio File
+              </Typography>
             </Box>
-          ) : (
-            /* Transcription Segments — read-only or editor */
-            !transcriptionState.cancelled && !transcriptionState.error && transcriptionSegments && transcriptionSegments.length > 0 && (
-              isEditing ? (
-                <TranscriptionEditor
-                  segments={editedSegments}
-                  onChange={handleSegmentsChange}
-                />
-              ) : (
-                <Box>
-                  {transcriptionSegments.map((segment) => (
-                    <Box key={segment.id} sx={{ px: 4 }}>
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          padding: '0',
-                          gap: 6,
-                          py: 2,
-                          '&:hover .timestamp': {
-                            '& .play-icon': {
-                              opacity: 1
-                            }
-                          }
-                        }}
-                        onMouseEnter={() => setHoveredTimestamp(String(segment.id))}
-                        onMouseLeave={() => setHoveredTimestamp(null)}
-                      >
-                        <Box
-                          className="timestamp"
-                          sx={{
-                            color: '#93b3c8',
-                            fontSize: '14px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            minWidth: '80px'
-                          }}
-                          onClick={() => handleTimestampClick(segment.startOfChunk)}
-                        >
-                          <Typography sx={{ fontSize: '14px', color: '#93b3c8' }}>
-                            {segment.timestampOfChunk}
-                          </Typography>
-                          <PlayArrowIcon
-                            className="play-icon"
-                            sx={{
-                              fontSize: '16px',
-                              color: '#93b3c8',
-                              opacity: hoveredTimestamp === String(segment.id) ? 1 : 0,
-                              transition: 'opacity 0.2s'
-                            }}
-                          />
-                        </Box>
-                        <Typography
-                          sx={{
-                            color: 'white',
-                            fontSize: '14px',
-                            textAlign: 'left',
-                            flex: 1
-                          }}
-                        >
-                          {segment.segments.map((s, index) => (
-                            <span key={s.id || index}>{s.text}</span>
-                          ))}
-                        </Typography>
-                      </Box>
-                    </Box>
-                  ))}
-                </Box>
-              )
-            )
-          )}
-          
-          {/* No segments message */}
-          {!showInProgress && transcriptionSegments && transcriptionSegments.length === 0 && !transcriptionState.error && !transcriptionState.cancelled && (
-            <Box sx={{ px: 4, py: 3 }}>
-              <Typography sx={{ color: '#93b3c8' }}>No transcription segments available</Typography>
+          </Box>
+          <AudioPlayer src={transcription.audioTranscriptionPath} />
+        </Box>
+
+        {/* AI Summary */}
+        {transcription?.status === 'completed' && (
+          <TranscriptionSummary
+            transcriptionId={Number(id)}
+            summary={currentSummary}
+            transcriptionText={
+              typeof transcription?.transcriptions === 'string'
+                ? transcription.transcriptions
+                : Array.isArray(transcription?.transcriptions)
+                ? transcription.transcriptions.map((s) => s.text).join(' ')
+                : null
+            }
+            onGenerateStart={() => setSummaryPollingInterval(3000)}
+          />
+        )}
+
+        {/* Transcription title */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3, mt: 2 }}>
+          <Typography
+            sx={{
+              fontFamily: '"Manrope", sans-serif',
+              fontWeight: 700,
+              fontSize: '1.125rem',
+              color: DS.onSurface,
+              letterSpacing: '-0.01em',
+            }}
+          >
+            Transcript
+          </Typography>
+          {isEditing && (
+            <Box
+              sx={{
+                px: 1.5,
+                py: 0.25,
+                borderRadius: '9999px',
+                bgcolor: `${DS.tertiary}1a`,
+                color: DS.tertiary,
+                fontSize: '10px',
+                fontWeight: 700,
+                fontFamily: '"Inter", sans-serif',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
+            >
+              Editing
             </Box>
           )}
         </Box>
+
+        {/* Progress State */}
+        {showInProgress && !transcriptionState.cancelled && !transcriptionState.error ? (
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Typography sx={{ color: DS.onSurface, fontFamily: '"Manrope", sans-serif', fontWeight: 700, fontSize: '1rem' }}>
+                {getStatusText()}
+              </Typography>
+              <IconButton onClick={handleCancel} title="Cancel transcription" sx={{ color: DS.outline, '&:hover': { color: DS.error } }}>
+                <CancelIcon />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Box sx={{ flex: 1, height: 6, borderRadius: '9999px', bgcolor: DS.surfaceHigh, overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    height: '100%',
+                    borderRadius: '9999px',
+                    background: DS.primaryGradient,
+                    width: `${transcriptionState.progress}%`,
+                    transition: 'width 0.5s ease',
+                  }}
+                />
+              </Box>
+              <Typography sx={{ color: DS.onSurfaceVariant, fontFamily: 'monospace', fontSize: '13px', flexShrink: 0 }}>
+                {transcriptionState.progress}%
+              </Typography>
+            </Box>
+            <TranscriptionSegmentsSkeleton />
+          </Box>
+        ) : (
+          !transcriptionState.cancelled && !transcriptionState.error && transcriptionSegments && transcriptionSegments.length > 0 && (
+            isEditing ? (
+              <TranscriptionEditor segments={editedSegments} onChange={handleSegmentsChange} />
+            ) : (
+              <Box>
+                {transcriptionSegments.map((segment) => (
+                  <Box
+                    key={segment.id}
+                    sx={{
+                      display: 'flex',
+                      gap: 3,
+                      mb: 6,
+                    }}
+                    onMouseEnter={() => setHoveredTimestamp(String(segment.id))}
+                    onMouseLeave={() => setHoveredTimestamp(null)}
+                  >
+                    <Box
+                      sx={{
+                        width: '96px',
+                        flexShrink: 0,
+                        fontFamily: 'monospace',
+                        fontSize: '12px',
+                        color: hoveredTimestamp === String(segment.id) ? DS.primary : DS.outline,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 0.5,
+                        pt: '4px',
+                        transition: 'color 0.2s',
+                      }}
+                      onClick={() => handleTimestampClick(segment.startOfChunk)}
+                    >
+                      <PlayArrowIcon
+                        sx={{
+                          fontSize: '14px',
+                          opacity: hoveredTimestamp === String(segment.id) ? 1 : 0,
+                          transition: 'opacity 0.2s',
+                          flexShrink: 0,
+                          mt: '1px',
+                        }}
+                      />
+                      {segment.timestampOfChunk}
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontFamily: '"Newsreader", serif',
+                        fontSize: '1.25rem',
+                        lineHeight: 1.6,
+                        color: DS.onSurface,
+                        flex: 1,
+                      }}
+                    >
+                      {segment.segments.map((s, index) => (
+                        <span key={s.id || index}>{s.text}</span>
+                      ))}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            )
+          )
+        )}
+
+        {/* No segments */}
+        {!showInProgress && transcriptionSegments && transcriptionSegments.length === 0 && !transcriptionState.error && !transcriptionState.cancelled && (
+          <Typography sx={{ color: DS.onSurfaceVariant, fontFamily: '"Newsreader", serif', fontSize: '1rem', fontStyle: 'italic' }}>
+            No transcription segments available
+          </Typography>
+        )}
+
+        {/* Error */}
+        {transcriptionState.error && (
+          <Alert
+            severity="error"
+            sx={{ bgcolor: `${DS.errorContainer}33`, color: DS.error, '& .MuiAlert-icon': { color: DS.error }, borderRadius: '12px', mt: 2 }}
+            action={<Button size="small" onClick={() => window.location.reload()} sx={{ color: DS.error }}>Retry</Button>}
+          >
+            {transcriptionState.error}
+          </Alert>
+        )}
+
+        {/* Cancelled */}
+        {transcriptionState.cancelled && (
+          <Alert
+            severity="info"
+            sx={{ bgcolor: `${DS.outlineVariant}1a`, color: DS.onSurfaceVariant, '& .MuiAlert-icon': { color: DS.outline }, borderRadius: '12px', mt: 2 }}
+          >
+            This transcription was cancelled. You can upload a new file to try again.
+          </Alert>
+        )}
       </Box>
-      
-      {/* Copy Success Snackbar */}
-      <Snackbar
-        open={copied}
-        autoHideDuration={2000}
-        onClose={() => setCopied(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert 
-          onClose={() => setCopied(false)} 
-          severity="success" 
-          sx={{ 
-            bgcolor: '#2d4a2d',
-            color: '#4caf50' 
-          }}
-        >
+
+      <Snackbar open={copied} autoHideDuration={2000} onClose={() => setCopied(false)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={() => setCopied(false)} severity="success" sx={{ bgcolor: 'rgba(34, 197, 94, 0.1)', color: '#34d399' }}>
           Copied to clipboard!
         </Alert>
       </Snackbar>

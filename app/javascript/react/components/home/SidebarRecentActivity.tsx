@@ -1,11 +1,11 @@
 import React from 'react';
-import Box from '@mui/joy/Box';
-import Typography from '@mui/joy/Typography';
-import Skeleton from '@mui/joy/Skeleton';
-import Link from '@mui/joy/Link';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Skeleton from '@mui/material/Skeleton';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useGetTranscriptionsQuery } from '../../redux/resourcesApi/transcriptions/transcriptionsSlice';
 import { Transcription } from '../../redux/resourcesApi/transcriptions/types';
+import { DS } from '../../theme';
 
 const IN_PROGRESS_STATUSES = new Set([
   'in_progress',
@@ -16,11 +16,10 @@ const IN_PROGRESS_STATUSES = new Set([
 ]);
 
 function statusDotColor(status: string): string {
-  if (status === 'completed') return 'var(--joy-palette-success-500, #1a7f4b)';
-  if (status === 'failed') return 'var(--joy-palette-danger-500, #c41c1c)';
-  if (status === 'cancelled') return 'var(--joy-palette-neutral-500, #636b74)';
-  if (IN_PROGRESS_STATUSES.has(status)) return 'var(--joy-palette-warning-500, #9a5b13)';
-  return 'var(--joy-palette-neutral-500, #636b74)';
+  if (status === 'completed') return '#22c55e';
+  if (status === 'failed') return DS.error;
+  if (IN_PROGRESS_STATUSES.has(status)) return DS.tertiary;
+  return DS.outline;
 }
 
 function statusLabel(status: string): string {
@@ -59,6 +58,7 @@ interface ActivityItemProps {
 
 const ActivityItem: React.FC<ActivityItemProps> = ({ transcription, onClick }) => {
   const isInProgress = IN_PROGRESS_STATUSES.has(transcription.status);
+  const isFailed = transcription.status === 'failed';
   const dotColor = statusDotColor(transcription.status);
   const displayName = truncate(transcription.audioFilename || `Transcription #${transcription.id}`, 28);
 
@@ -74,29 +74,28 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ transcription, onClick }) =
         borderRadius: '8px',
         cursor: 'pointer',
         transition: 'background 0.15s',
+        bgcolor: isFailed ? 'rgba(147, 0, 10, 0.1)' : 'transparent',
         '&:hover': {
-          bgcolor: 'rgba(255, 255, 255, 0.05)',
+          bgcolor: isFailed ? 'rgba(147, 0, 10, 0.15)' : DS.surface,
         },
       }}
     >
-      {/* Status dot */}
       <Box
         sx={{
           flexShrink: 0,
-          width: 10,
-          height: 10,
+          width: 8,
+          height: 8,
           borderRadius: '50%',
           bgcolor: dotColor,
           ...(isInProgress ? pulseAnimation : {}),
         }}
       />
-
-      {/* Title and status */}
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography
-          level="body-sm"
           sx={{
-            color: 'white',
+            color: DS.onSurface,
+            fontFamily: '"Inter", sans-serif',
+            fontSize: '13px',
             fontWeight: 500,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -107,9 +106,10 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ transcription, onClick }) =
           {displayName}
         </Typography>
         <Typography
-          level="body-xs"
           sx={{
-            color: '#9db1be',
+            color: isFailed ? DS.error : DS.onSurfaceVariant,
+            fontFamily: '"Inter", sans-serif',
+            fontSize: '11px',
             lineHeight: 1.3,
             mt: 0.25,
           }}
@@ -117,13 +117,12 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ transcription, onClick }) =
           {statusLabel(transcription.status)}
         </Typography>
       </Box>
-
-      {/* Date */}
       <Typography
-        level="body-xs"
         sx={{
           flexShrink: 0,
-          color: '#6b7f8a',
+          color: DS.outline,
+          fontFamily: '"Inter", sans-serif',
+          fontSize: '11px',
           whiteSpace: 'nowrap',
         }}
       >
@@ -139,68 +138,146 @@ const SidebarRecentActivity: React.FC = () => {
   const recent = data?.transcriptions?.slice(0, 5) ?? [];
 
   return (
-    <Box
-      sx={{
-        bgcolor: '#141b1f',
-        border: '1px solid #3d505c',
-        borderRadius: '12px',
-        p: 2,
-        minWidth: 220,
-      }}
-    >
-      <Typography
-        level="title-sm"
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 240 }}>
+      {/* Recent Activity Card */}
+      <Box
         sx={{
-          mb: 1.5,
-          color: 'white',
-          fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
-          fontWeight: 'bold',
+          bgcolor: DS.surfaceLow,
+          borderRadius: '12px',
+          p: 2,
+          border: `1px solid ${DS.outlineVariant}1a`,
         }}
       >
-        Recent Activity
-      </Typography>
-
-      {isLoading ? (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-          {[0, 1, 2].map((i) => (
-            <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <Skeleton variant="circular" width={10} height={10} />
-              <Box sx={{ flex: 1 }}>
-                <Skeleton variant="text" level="body-sm" width="70%" />
-                <Skeleton variant="text" level="body-xs" width="40%" />
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      ) : recent.length === 0 ? (
-        <Typography level="body-sm" sx={{ color: '#9db1be' }}>
-          No transcriptions yet. Upload your first file.
-        </Typography>
-      ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          {recent.map((t) => (
-            <ActivityItem
-              key={t.id}
-              transcription={t}
-              onClick={() => navigate(`/transcriptions/${t.id}`)}
-            />
-          ))}
-        </Box>
-      )}
-
-      <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px solid #3d505c' }}>
-        <Link
-          component={RouterLink}
-          to="/transcriptions"
-          level="body-sm"
+        <Typography
           sx={{
-            color: '#1994e6',
-            textDecoration: 'none',
-            '&:hover': { textDecoration: 'underline' },
+            mb: 1.5,
+            color: DS.onSurface,
+            fontFamily: '"Manrope", sans-serif',
+            fontWeight: 700,
+            fontSize: '14px',
           }}
         >
-          View all →
-        </Link>
+          Recent Activity
+        </Typography>
+
+        {isLoading ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {[0, 1, 2].map((i) => (
+              <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Skeleton variant="circular" width={8} height={8} sx={{ bgcolor: DS.surfaceHigh }} />
+                <Box sx={{ flex: 1 }}>
+                  <Skeleton variant="text" width="70%" sx={{ bgcolor: DS.surfaceHigh }} />
+                  <Skeleton variant="text" width="40%" sx={{ bgcolor: DS.surfaceHigh }} />
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        ) : recent.length === 0 ? (
+          <Typography
+            sx={{
+              color: DS.onSurfaceVariant,
+              fontFamily: '"Newsreader", serif',
+              fontSize: '13px',
+              fontStyle: 'italic',
+            }}
+          >
+            No transcriptions yet. Upload your first file.
+          </Typography>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            {recent.map((t) => (
+              <ActivityItem
+                key={t.id}
+                transcription={t}
+                onClick={() => navigate(`/transcriptions/${t.id}`)}
+              />
+            ))}
+          </Box>
+        )}
+
+        <Box sx={{ mt: 2, pt: 1.5, borderTop: `1px solid ${DS.outlineVariant}30` }}>
+          <Typography
+            component={RouterLink}
+            to="/transcriptions"
+            sx={{
+              color: DS.primary,
+              textDecoration: 'none',
+              fontFamily: '"Inter", sans-serif',
+              fontSize: '10px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              '&:hover': { opacity: 0.8 },
+            }}
+          >
+            View all activity →
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Workspace Usage Card */}
+      <Box
+        sx={{
+          bgcolor: DS.surfaceLow,
+          borderRadius: '12px',
+          p: 2,
+          border: `1px solid ${DS.outlineVariant}1a`,
+        }}
+      >
+        <Typography
+          sx={{
+            mb: 0.5,
+            color: DS.onSurface,
+            fontFamily: '"Manrope", sans-serif',
+            fontWeight: 700,
+            fontSize: '14px',
+          }}
+        >
+          Workspace Usage
+        </Typography>
+        <Typography
+          sx={{
+            color: DS.onSurfaceVariant,
+            fontFamily: '"Inter", sans-serif',
+            fontSize: '11px',
+            mb: 1.5,
+          }}
+        >
+          {recent.length} / 100 transcriptions used
+        </Typography>
+
+        {/* Progress bar */}
+        <Box sx={{ bgcolor: DS.surfaceLowest, borderRadius: '9999px', height: 4, overflow: 'hidden', mb: 1.5 }}>
+          <Box
+            sx={{
+              height: '100%',
+              borderRadius: '9999px',
+              background: DS.primaryGradient,
+              width: `${Math.min((recent.length / 100) * 100, 100)}%`,
+              transition: 'width 0.5s ease',
+            }}
+          />
+        </Box>
+
+        <Box
+          component="button"
+          sx={{
+            width: '100%',
+            py: 1,
+            borderRadius: '8px',
+            bgcolor: DS.secondaryContainer,
+            color: DS.onSecondaryContainer,
+            fontFamily: '"Inter", sans-serif',
+            fontSize: '12px',
+            fontWeight: 600,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s',
+            '&:hover': { opacity: 0.85 },
+          }}
+        >
+          Upgrade Plan
+        </Box>
       </Box>
     </Box>
   );

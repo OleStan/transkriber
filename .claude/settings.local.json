@@ -3,7 +3,16 @@
     "allow": [
       "Bash(bundle install:*)",
       "Bash(cat:*)",
-      "Bash(grep -r \"TODO\\\\|FIXME\\\\|STUB\\\\|XXX\\\\|HACK\\\\|INCOMPLETE\" /Users/olesstankevych/ole/study/transcriber/app --include=*.rb --include=*.tsx --include=*.ts)"
+      "Bash(grep -r \"TODO\\\\|FIXME\\\\|STUB\\\\|XXX\\\\|HACK\\\\|INCOMPLETE\" /Users/olesstankevych/ole/study/transcriber/app --include=*.rb --include=*.tsx --include=*.ts)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(gh api:*)",
+      "mcp__stitch__get_screen",
+      "Bash(mkdir -p /tmp/stitch-designs)",
+      "Read(//tmp/**)",
+      "Bash(curl -sL \"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzRlM2QzODJmOWI3MDQ2MWU5MWEwMDhjYzM1NjZkYjYzEgsSBxCMmrm4ogYYAZIBJAoKcHJvamVjdF9pZBIWQhQxNDU2NDM4NzU2ODYyOTY0NDYzMg&filename=&opi=89354086\" -o transcriptions-list.html)",
+      "Bash(curl -sL \"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sX2EyMjE5YTczNGQwZjQ0MjE5YjY0NzZmYmI4YjI0YjBjEgsSBxCMmrm4ogYYAZIBJAoKcHJvamVjdF9pZBIWQhQxNDU2NDM4NzU2ODYyOTY0NDYzMg&filename=&opi=89354086\" -o transcription-detail-1.html)",
+      "Bash(curl -sL \"https://contribution.usercontent.google.com/download?c=CgthaWRhX2NvZGVmeBJ8Eh1hcHBfY29tcGFuaW9uX2dlbmVyYXRlZF9maWxlcxpbCiVodG1sXzg2YWY4YTBkOTYzNDRjYzlhMTAwZjU2N2M1ZDdmZWQ0EgsSBxCMmrm4ogYYAZIBJAoKcHJvamVjdF9pZBIWQhQxNDU2NDM4NzU2ODYyOTY0NDYzMg&filename=&opi=89354086\" -o settings.html)"
     ],
     "deny": [],
     "ask": []
