@@ -3,7 +3,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.3.6'
+ruby '3.3.9'
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem 'rails', '~> 7.2.2', '>= 7.2.2.1'
@@ -38,6 +38,12 @@ gem 'redis', '~> 4.0'
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 
+# Authentication
+gem 'devise', '~> 4.9'
+gem 'omniauth', '~> 2.1'
+gem 'omniauth-google-oauth2', '~> 1.1'
+gem 'omniauth-rails_csrf_protection', '~> 1.0' # Prevents CSRF attacks
+
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 
@@ -46,6 +52,8 @@ gem 'bootsnap', require: false
 
 # Generate text with ChatGPT, transcribe or translate audio with Whisper, create images with DALL·E
 gem 'ruby-openai'
+gem 'assemblyai'
+gem 'stripe', '~> 12.0'
 
 # Env keys
 gem 'figaro'
@@ -76,6 +84,9 @@ gem 'activeinteractor', require: 'active_interactor'
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem 'debug', platforms: %i[mri mingw x64_mingw]
+  gem 'faker'
+  gem 'rspec-rails', '~> 6.1'
+  gem 'factory_bot_rails', '~> 6.4'
 end
 
 gem 'rack-cors', require: 'rack/cors'
@@ -97,9 +108,11 @@ group :test do
   gem 'capybara'
   gem 'selenium-webdriver'
   gem 'webdrivers'
+  gem 'shoulda-matchers', '~> 6.0'
 end
 
 gem 'tailwindcss-rails', '~> 2.0'
 
 gem 'sidekiq', '~> 7.2'
-gem 'streamio-ffmpeg'
+
+gem 'google-cloud-speech', '~> 2.0'

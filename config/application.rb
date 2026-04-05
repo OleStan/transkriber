@@ -16,6 +16,9 @@ module Transcriber
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # Load Google Speech config
+    config.google_speech = config_for(:google_speech)
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

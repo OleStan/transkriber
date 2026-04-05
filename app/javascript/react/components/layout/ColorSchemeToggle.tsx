@@ -32,10 +32,10 @@ const ColorSchemeToggle = (props: IconButtonProps) => {
       }}
       sx={[
         {
-          '& > *:first-child': {
+          '& > *:first-of-type': {
             display: mode === 'dark' ? 'none' : 'initial',
           },
-          '& > *:last-child': {
+          '& > *:last-of-type': {
             display: mode === 'light' ? 'none' : 'initial',
           },
         },

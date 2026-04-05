@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import GlobalStyles from '@mui/joy/GlobalStyles';
 import Avatar from '@mui/joy/Avatar';
 import Box from '@mui/joy/Box';
@@ -59,6 +60,13 @@ const Toggler = ({
 };
 
 const SideBar = () => {
+  const { logout, isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
   return (
     <Sheet
       className='Sidebar'
@@ -216,20 +224,34 @@ const SideBar = () => {
         </List>
       </Box>
       <Divider />
-      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-        <Avatar
-          variant='outlined'
-          size='sm'
-          src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=286'
-        />
-        <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Typography level='title-sm'>Siriwat K.</Typography>
-          <Typography level='body-xs'>siriwatk@test.com</Typography>
+      {isAuthenticated ? (
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Avatar
+            variant='outlined'
+            size='sm'
+          />
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography level='title-sm'>{user?.email?.split('@')[0]}</Typography>
+            <Typography level='body-xs'>{user?.email}</Typography>
+          </Box>
+          <IconButton 
+            size='sm' 
+            variant='plain' 
+            color='neutral' 
+            onClick={handleLogout}
+          >
+            <LogoutRoundedIcon />
+          </IconButton>
         </Box>
-        <IconButton size='sm' variant='plain' color='neutral'>
-          <LogoutRoundedIcon />
-        </IconButton>
-      </Box>
+      ) : (
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Link to='/login' style={{ textDecoration: 'none', flexGrow: 1 }}>
+            <ListItemButton>
+              <Typography level='title-sm'>Login</Typography>
+            </ListItemButton>
+          </Link>
+        </Box>
+      )}
     </Sheet>
   );
 };

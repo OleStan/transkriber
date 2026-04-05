@@ -1,11 +1,17 @@
 <div class="flex flex-col items-center">
-  <div class="w-full">
-    <audio class="w-full" controls>
-      <source src="<%= url_for(@transcription.audio) %>" type="<%= @transcription.audio.content_type %>">
-      Your browser does not support the audio element.
-    </audio>
-  </div>
-  <div class="mt-4 text-gray-500 text-sm">
-    <span class="font-bold">Filename:</span> <%= @transcription.audio.filename %>
-  </div>
+  <% if @transcription.audio.attached? %>
+    <div class="w-full">
+      <audio class="w-full" controls>
+        <source src="<%= url_for(@transcription.audio) %>" type="<%= @transcription.audio.content_type %>">
+        Your browser does not support the audio element.
+      </audio>
+    </div>
+    <div class="mt-4 text-gray-500 text-sm">
+      <span class="font-bold">Filename:</span> <%= @transcription.audio.filename %>
+    </div>
+  <% else %>
+    <div class="w-full flex justify-center items-center py-8">
+
+    </div>
+  <% end %>
 </div>
